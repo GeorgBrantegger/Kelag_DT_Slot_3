@@ -109,8 +109,8 @@ def h_V_test_1(V):
 
 
 def test_2_parameters():
-    x = 10
-    d = 10
+    x = 10.
+    d = 10.
     return x,d
 
 def V_h_test_2(h):
