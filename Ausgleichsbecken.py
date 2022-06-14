@@ -38,8 +38,8 @@ def get_h_halfstep(initial_height, influx, outflux, timestep, area):
 def get_p_halfstep(p0, p1):
     p_halfstep = (p0+p1)/2
 
-def FODE_function(x, h, alpha, p, rho=1000, g=9.81):
-    f = x**2/h*alpha+g+p/(rho*h)
+def FODE_function(x, h, alpha, p, rho=1000., g=9.81):
+    f = x**2/h*alpha+g-p/(rho*h)
     return f
 
 
