@@ -72,7 +72,7 @@ class Ausgleichsbecken_class:
         dt = self.timestep
         p = self.p0
         p_hs = self.p0
-        alpha = (self.area/self.area_outflux-1)
+        alpha = (self.area_outflux/self.area-1)
         h_hs = self.update_level(dt/2)
         Y1 = yn
         Y2 = yn + dt/2*FODE_function(Y1, h, alpha, self.p0)
