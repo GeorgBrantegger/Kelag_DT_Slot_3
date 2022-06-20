@@ -1,4 +1,9 @@
-import numpy as np
-print(np.__version__)
+class Person:
+  def __init__(self, name, age):
+    self.name = name
+    self.age = age
 
-print("Test for Github commit")
+p1 = Person("John", 36)
+
+print(p1.name)
+print(p1.age)
