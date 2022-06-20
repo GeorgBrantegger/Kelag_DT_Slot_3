@@ -73,12 +73,12 @@ class Ausgleichsbecken_class:
         yn = self.outflux/self.area_outflux
         h = self.level
         dt = self.timestep
-        p,_ = pressure_conversion(self.p0,self.pressure_unit,'Pa')
-        p_hs,_ = pressure_conversion(self.p0,self.pressure_unit,'Pa')
+        p,_ = pressure_conversion(self.initial_pressure,self.pressure_unit,'Pa')
+        p_hs,_ = pressure_conversion(self.initial_pressure,self.pressure_unit,'Pa')
         alpha = (self.area_outflux/self.area-1)
         h_hs = self.update_level(dt/2)
         Y1 = yn
-        Y2 = yn + dt/2*FODE_function(Y1, h, alpha, self.p0)
+        Y2 = yn + dt/2*FODE_function(Y1, h, alpha, self.initial_pressure)
         Y3 = yn + dt/2*FODE_function(Y2, h_hs, alpha, p_hs)
         Y4 = yn + dt*FODE_function(Y3, h_hs, alpha, p_hs)
         ynp1 = yn + dt/6*(FODE_function(Y1, h, alpha, p)+2*FODE_function(Y2, h_hs, alpha, p_hs)+ \
