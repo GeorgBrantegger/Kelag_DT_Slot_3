@@ -39,7 +39,7 @@ def get_p_halfstep(p0, p1):
     p_halfstep = (p0+p1)/2
 
 def FODE_function(x, h, alpha, p, rho=1000., g=9.81):
-    f = x**2/h*alpha+g-p/(rho*h)
+    f = x*abs(x)/h*alpha+g-p/(rho*h)
     return f
 
 
