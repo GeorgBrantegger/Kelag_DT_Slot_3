@@ -1,12 +1,13 @@
 from Ausgleichsbecken import FODE_function, get_h_halfstep, get_p_halfstep
 class Ausgleichsbecken_class:
 # units
-    area_unit           = 'm^2'
-    area_outflux_unit   = 'm^2'
+    area_unit           = r'$\mathrm{m}^2$'
+    area_outflux_unit   = r'$\mathrm{m}^2$'
     level_unit          = 'm'
-    volume_unit         = 'm^3'
-    flux_unit           = 'm^3/s'
+    volume_unit         = r'$\mathrm{m}^3$'
+    flux_unit           = r'$\mathrm{m}^3/\mathrm{s}$'
     time_unit           = 's'
+    pressure_unit       = 'Pa'
 
 # init
     def __init__(self,area,outflux_area,level_min,level_max,timestep = 1):
