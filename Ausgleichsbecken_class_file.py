@@ -1,4 +1,5 @@
 from Ausgleichsbecken import FODE_function, get_h_halfstep, get_p_halfstep
+from functions.pressure_conversion import pressure_conversion
 class Ausgleichsbecken_class:
 # units
     area_unit           = r'$\mathrm{m}^2$'
@@ -72,8 +73,8 @@ class Ausgleichsbecken_class:
         yn = self.outflux/self.area_outflux
         h = self.level
         dt = self.timestep
-        p = self.p0
-        p_hs = self.p0
+        p,_ = pressure_conversion(self.p0,self.pressure_unit,'Pa')
+        p_hs,_ = pressure_conversion(self.p0,self.pressure_unit,'Pa')
         alpha = (self.area_outflux/self.area-1)
         h_hs = self.update_level(dt/2)
         Y1 = yn
