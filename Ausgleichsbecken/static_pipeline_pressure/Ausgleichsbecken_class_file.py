@@ -1,5 +1,5 @@
 from Ausgleichsbecken import FODE_function, get_h_halfstep, get_p_halfstep
-from functions.pressure_conversion import pressure_conversion
+from pressure_conversion import pressure_conversion
 class Ausgleichsbecken_class:
 # units
     area_unit           = r'$\mathrm{m}^2$'
