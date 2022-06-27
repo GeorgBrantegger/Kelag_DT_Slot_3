@@ -69,7 +69,6 @@ class Ausgleichsbecken_class:
 
 
     def e_RK_4(self):
-        # Update to deal with non constant pipeline pressure!
         yn = self.outflux/self.area_outflux
         h = self.level
         dt = self.timestep
