@@ -4,11 +4,11 @@ class Ausgleichsbecken_class:
 # units
     area_unit           = r'$\mathrm{m}^2$'
     area_outflux_unit   = r'$\mathrm{m}^2$'
-    level_unit          = 'm'
-    volume_unit         = r'$\mathrm{m}^3$'
     flux_unit           = r'$\mathrm{m}^3/\mathrm{s}$'
-    time_unit           = 's'
+    level_unit          = 'm'
     pressure_unit       = 'Pa'
+    time_unit           = 's'
+    volume_unit         = r'$\mathrm{m}^3$'
 
 # init
     def __init__(self,area,outflux_area,level_min,level_max,timestep = 1):
@@ -73,6 +73,7 @@ class Ausgleichsbecken_class:
         h = self.level
         dt = self.timestep
         p,_ = pressure_conversion(self.pressure,self.pressure_unit,'Pa')
+        # update to include p_halfstep
         p_hs,_ = pressure_conversion(self.pressure,self.pressure_unit,'Pa')
         alpha = (self.area_outflux/self.area-1)
         h_hs = self.update_level(dt/2)

@@ -18,13 +18,13 @@ class Ausgleichsbecken_class:
         self.level_max      = level_max         # highest allowed water level
         self.timestep       = timestep          # timestep of the simulation    
 
-# setter
-    def set_volume(self):
+    def update_volume(self):
         self.volume = self.level*self.area 
+# setter
 
     def set_initial_level(self,initial_level):
         self.level = initial_level
-        self.set_volume()
+        self.update_volume()
 
     def set_influx(self,influx):
         self.influx = influx
@@ -61,7 +61,10 @@ class Ausgleichsbecken_class:
         print('The current outflux is', self.outflux, self.flux_unit)
 
 # methods
+
+
     def update_level(self,timestep):
+        # dont update volume here, because update_level gets called to calculate h_halfstep
         net_flux = self.influx-self.outflux
         delta_V = net_flux*timestep
         new_level = (self.volume+delta_V)/self.area
