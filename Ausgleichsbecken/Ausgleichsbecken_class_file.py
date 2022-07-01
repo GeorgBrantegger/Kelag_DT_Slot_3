@@ -1,15 +1,18 @@
+import numpy as np
 from Ausgleichsbecken_functions import FODE_function, get_h_halfstep, get_p_halfstep
 
 #importing pressure conversion function
 import sys
 import os
-current = os.path.dirname(os.path.realpath('Main_Programm.ipynb'))
+current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
 
 class Ausgleichsbecken_class:
-# units
+# units 
+    # make sure that units and print units are the same
+    # units are used to label graphs and print units are used to have a bearable format when using pythons print()
     area_unit           = r'$\mathrm{m}^2$'
     area_outflux_unit   = r'$\mathrm{m}^2$'
     flux_unit           = r'$\mathrm{m}^3/\mathrm{s}$'
@@ -18,13 +21,28 @@ class Ausgleichsbecken_class:
     time_unit           = 's'
     volume_unit         = r'$\mathrm{m}^3$'
 
+    area_unit_print           = 'm²'
+    area_outflux_unit_print   = 'm²'
+    flux_unit_print           = 'm³/s'
+    level_unit_print          = 'm'
+    pressure_unit_print       = 'Pa'
+    time_unit_print           = 's'
+    volume_unit_print         = 'm³'
+
 # init
-    def __init__(self,area,outflux_area,level_min,level_max,timestep = 1):
+    def __init__(self,area,outflux_area,level_min = 0,level_max = np.inf ,timestep = 1):
         self.area           = area              # base area of the rectangular structure
         self.area_outflux   = outflux_area      # area of the outlet towards the pipeline        
         self.level_min      = level_min         # lowest  allowed water level    
         self.level_max      = level_max         # highest allowed water level
-        self.timestep       = timestep          # timestep of the simulation    
+        self.timestep       = timestep          # timestep of the simulation
+
+        # initialize for get_info
+        self.level          = "--"
+        self.influx         = "--"
+        self.outflux        = "--"
+        self.volume         = "--"
+        
 
 # setter
     def set_volume(self):
@@ -41,32 +59,35 @@ class Ausgleichsbecken_class:
         self.outflux = outflux
 
 # getter
-    def get_area(self):
-        print('The base area of the cuboid reservoir is', self.area, self.area_unit)
+    def get_info(self, full = False):
+        new_line = '\n'
+        
+        if full == True:
+            # :<10 pads the self.value to be 10 characters wide
+            print_str = (f"The cuboid reservoir has the following attributes: {new_line}" 
+                f"----------------------------- {new_line}"
+                f"Base area             =       {self.area:<10} {self.area_unit_print} {new_line}"
+                f"Outflux area          =       {self.area_outflux:<10} {self.area_outflux_unit_print} {new_line}"
+                f"Current level         =       {self.level:<10} {self.level_unit_print}{new_line}"
+                f"Critical level low    =       {self.level_min:<10} {self.level_unit_print} {new_line}"
+                f"Critical level high   =       {self.level_max:<10} {self.level_unit_print} {new_line}"
+                f"Volume in reservoir   =       {self.volume:<10} {self.volume_unit_print} {new_line}"
+                f"Current influx        =       {self.influx:<10} {self.flux_unit_print} {new_line}"
+                f"Current outflux       =       {self.outflux:<10} {self.flux_unit_print} {new_line}"
+                f"Simulation timestep   =       {self.timestep:<10} {self.time_unit_print} {new_line}"
+                f"----------------------------- {new_line}")
+        else:
+            # :<10 pads the self.value to be 10 characters wide
+            print_str = (f"The current attributes are: {new_line}" 
+                f"----------------------------- {new_line}"
+                f"Current level         =       {self.level:<10} {self.level_unit_print}{new_line}"
+                f"Volume in reservoir   =       {self.volume:<10} {self.volume_unit_print} {new_line}"
+                f"Current influx        =       {self.influx:<10} {self.flux_unit_print} {new_line}"
+                f"Current outflux       =       {self.outflux:<10} {self.flux_unit_print} {new_line}"
+                f"----------------------------- {new_line}")
 
-    def get_outflux_area(self):
-        print('The outflux area from the cuboid reservoir to the pipeline is', \
-            self.area_outflux, self.area_outflux_unit)
-    
-    def get_level(self):
-        print('The current level in the reservoir is', self.level , self.level_unit)
+        print(print_str)
 
-    def get_crit_levels(self):
-        print('The critical water levels in the reservoir are:  \n',\
-            '   Minimum:', self.level_min , self.level_unit , '\n',\
-            '   Maximum:', self.level_max , self.level_unit )
-
-    def get_volume(self):
-        print('The current water volume in the reservoir is', self.volume, self.volume_unit)
-
-    def get_timestep(self):
-        print('The timestep for the simulation is' , self.timestep, self.time_unit)
-
-    def get_influx(self):
-        print('The current influx is', self.influx, self.flux_unit)
-
-    def get_outflux(self):
-        print('The current outflux is', self.outflux, self.flux_unit)
 
 # methods
     def update_level(self,timestep):
