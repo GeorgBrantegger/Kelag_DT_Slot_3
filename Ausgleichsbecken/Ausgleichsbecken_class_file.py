@@ -1,5 +1,5 @@
 import numpy as np
-from Ausgleichsbecken_functions import FODE_function, get_h_halfstep, get_p_halfstep
+# from Ausgleichsbecken_functions import FODE_function, get_h_halfstep, get_p_halfstep
 
 #importing pressure conversion function
 import sys
@@ -8,6 +8,11 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
+
+def FODE_function(x, h, alpha, p, rho=1000., g=9.81):
+    f = x*abs(x)/h*alpha+g-p/(rho*h)
+    return f
+
 
 class Ausgleichsbecken_class:
 # units 

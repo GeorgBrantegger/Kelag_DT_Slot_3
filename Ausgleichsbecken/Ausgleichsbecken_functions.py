@@ -25,6 +25,6 @@ def e_RK_4(yn, h, dt, Q0, Q1, A0, A1, p0, p1):
     Y2 = yn + dt/2*FODE_function(Y1, h, alpha, p0)
     Y3 = yn + dt/2*FODE_function(Y2, h_hs, alpha, p_hs)
     Y4 = yn + dt*FODE_function(Y3, h_hs, alpha, p_hs)
-    ynp1 = yn + dt/6*(FODE_function(Y1, h, alpha, p)+2*FODE_function(Y2, h_hs, alpha, p_hs)+ \
-        2*FODE_function(Y3, h_hs, alpha, p_hs)+ FODE_function(Y4, h, alpha, p))
+    ynp1 = yn + dt/6*(FODE_function(Y1, h, alpha, p0)+2*FODE_function(Y2, h_hs, alpha, p_hs)+ \
+        2*FODE_function(Y3, h_hs, alpha, p_hs)+ FODE_function(Y4, h, alpha, p0))
 
