@@ -12,7 +12,7 @@ from functions.pressure_conversion import pressure_conversion
 class Druckrohrleitung_class:
 # units
     acceleration_unit   = r'$\mathrm{m}/\mathrm{s}^2$'
-    angle_unit          = 'rad'
+    angle_unit          = '°'
     area_unit           = r'$\mathrm{m}^2$'
     density_unit        = r'$\mathrm{kg}/\mathrm{m}^3$'
     flux_unit           = r'$\mathrm{m}^3/\mathrm{s}$'
@@ -23,7 +23,7 @@ class Druckrohrleitung_class:
     volume_unit         = r'$\mathrm{m}^3$'
 
     acceleration_unit_print   = 'm/s²'
-    angle_unit_print          = 'rad'
+    angle_unit_print          = '°'
     area_unit_print           = 'm²'
     density_unit_print        = 'kg/m³'
     flux_unit_print           = 'm³/s'
@@ -89,23 +89,21 @@ class Druckrohrleitung_class:
         self.v = np.empty_like(self.v_old)
     
     def set_boundary_conditions_next_timestep(self,v_reservoir,p_reservoir,v_turbine,input_unit_pressure = 'Pa'):
-        rho                     = self.density
-        c                       = self.c
-        f_D                     = self.f_D
-        dt                      = self.dt
-        D                       = self.dia
-        g                       = self.g
-        alpha                   = self.angle
-        p_old                   = self.p_old[-2]    # @ second to last node (the one before the turbine)
-        v_old                   = self.v_old[-2]    # @ second to last node (the one before the turbine)
-        self.v_boundary_res     = v_reservoir       # at new timestep
-        self.v_boundary_tur     = v_turbine         # at new timestep
-        self.p_boundary_res,_   = pressure_conversion(p_reservoir,input_unit_pressure,target_unit=self.pressure_unit)
-        self.p_boundary_tur     = p_old-rho*c*(v_turbine-v_old)+rho*c*dt*g*np.sin(alpha)-f_D*rho*c*dt/(2*D)*abs(v_old)*v_old
-        self.v[0]               = self.v_boundary_res.copy()
-        self.v[-1]              = self.v_boundary_tur.copy()
-        self.p[0]               = self.p_boundary_res.copy()
-        self.p[-1]              = self.p_boundary_tur.copy()
+        rho                 = self.density
+        c                   = self.c
+        f_D                 = self.f_D
+        dt                  = self.dt
+        D                   = self.dia
+        p_old               = self.p_old[-2]    # @ second to last node (the one before the turbine)
+        v_old               = self.v_old[-2]    # @ second to last node (the one before the turbine)
+        self.v_boundary_res = v_reservoir
+        self.v_boundary_tur = v_turbine
+        self.p_boundary_res,_ = pressure_conversion(p_reservoir,input_unit_pressure,target_unit=self.pressure_unit)
+        self.p_boundary_tur = p_old+rho*c*v_old-rho*c*f_D*dt/(2*D)*abs(v_old)*v_old
+        self.v[0]       = self.v_boundary_res.copy()
+        self.v[-1]      = self.v_boundary_tur.copy()
+        self.p[0]       = self.p_boundary_res.copy()
+        self.p[-1]      = self.p_boundary_tur.copy()
 
 # getter
     def get_info(self):
@@ -144,21 +142,19 @@ class Druckrohrleitung_class:
 
     def timestep_characteristic_method(self):
         #number of nodes
-        nn      = self.n_seg+1
-        rho     = self.density
-        c       = self.c
-        f_D     = self.f_D
-        dt      = self.dt
-        D       = self.dia
-        g       = self.g
-        alpha   = self.angle
+        nn  = self.n_seg+1
+        rho = self.density
+        c   = self.c
+        f_D = self.f_D
+        dt  = self.dt
+        D   = self.dia
 
         for i in range(1,nn-1):
-            self.v[i] = 0.5*(self.v_old[i+1]+self.v_old[i-1])-0.5/(rho*c)*(self.p_old[i+1]-self.p_old[i-1]) \
-                +dt*g*np.sin(alpha)-f_D*dt/(4*D)*(abs(self.v_old[i+1])*self.v_old[i+1]+abs(self.v_old[i-1])*self.v_old[i-1])
+            self.v[i] = 0.5*(self.v_old[i-1]+self.v_old[i+1])+0.5/(rho*c)*(self.p_old[i-1]-self.p_old[i+1]) \
+                -f_D*dt/(4*D)*(abs(self.v_old[i-1])*self.v_old[i-1]+abs(self.v_old[i+1])*self.v_old[i+1])
 
-            self.p[i] = 0.5*(self.p_old[i+1]+self.p_old[i-1]) - 0.5*rho*c*(self.v_old[i+1]-self.v_old[i-1]) \
-                +f_D*rho*c*dt/(4*D)*(abs(self.v_old[i+1])*self.v_old[i+1]-abs(self.v_old[i-1])*self.v_old[i-1])
+            self.p[i] = 0.5*rho*c*(self.v_old[i-1]-self.v_old[i+1])+0.5*(self.p_old[i-1]+self.p_old[i+1]) \
+                -rho*c*f_D*dt/(4*D)*(abs(self.v_old[i-1])*self.v_old[i-1]-abs(self.v_old[i+1])*self.v_old[i+1])
 
         self.p_old = self.p.copy()
         self.v_old = self.v.copy()        
