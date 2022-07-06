@@ -19,7 +19,6 @@ class Druckrohrleitung_class:
     density_unit        = r'$\mathrm{kg}/\mathrm{m}^3$'
     flux_unit           = r'$\mathrm{m}^3/\mathrm{s}$'
     length_unit         = 'm'
-    pressure_unit       = 'Pa'
     time_unit           = 's'
     velocity_unit       = r'$\mathrm{m}/\mathrm{s}$' # for flux and pressure propagation
     volume_unit         = r'$\mathrm{m}^3$'
@@ -30,7 +29,6 @@ class Druckrohrleitung_class:
     density_unit_print        = 'kg/m³'
     flux_unit_print           = 'm³/s'
     length_unit_print         = 'm'
-    pressure_unit_print       = 'Pa'
     time_unit_print           = 's'
     velocity_unit_print       = 'm/s' # for flux and pressure propagation
     volume_unit_print         = 'm³'
@@ -65,14 +63,15 @@ class Druckrohrleitung_class:
         else:
             self.t_vec = np.arange(0,self.nt*self.dt,self.dt)
 
-    def set_initial_pressure(self,pressure,input_unit = 'Pa'):
-        p,_ = pressure_conversion(pressure,input_unit,target_unit=self.pressure_unit)
-        if np.size(p) == 1:
-            self.p0 = np.full_like(self.l_vec,p)
-        elif np.size(p) == np.size(self.l_vec):
-            self.p0 = p
+    def set_initial_pressure(self,pressure,pressure_unit,display_pressure_unit):
+        if np.size(pressure) == 1:
+            self.p0 = np.full_like(self.l_vec,pressure)
+        elif np.size(pressure) == np.size(self.l_vec):
+            self.p0 = pressure
         else:
              raise Exception('Unable to assign initial pressure. Input has to be of size 1 or' + np.size(self.l_vec))
+        self.pressure_unit          = pressure_unit
+        self.pressure_unit_print    = display_pressure_unit        
         
         #initialize the vectors in which the old and new pressures are stored for the method of characteristics
         self.p_old = self.p0.copy()
@@ -102,7 +101,7 @@ class Druckrohrleitung_class:
         v_old                   = self.v_old[-2]    # @ second to last node (the one before the turbine)
         self.v_boundary_res     = v_reservoir       # at new timestep
         self.v_boundary_tur     = v_turbine         # at new timestep
-        self.p_boundary_res,_   = pressure_conversion(p_reservoir,input_unit_pressure,target_unit=self.pressure_unit)
+        self.p_boundary_res     = p_reservoir
         self.p_boundary_tur     = p_old-rho*c*(v_turbine-v_old)+rho*c*dt*g*np.sin(alpha)-f_D*rho*c*dt/(2*D)*abs(v_old)*v_old
         self.v[0]               = self.v_boundary_res.copy()
         self.v[-1]              = self.v_boundary_tur.copy()
@@ -137,15 +136,15 @@ class Druckrohrleitung_class:
         print(print_str)    
         
 
-    def get_boundary_conditions_next_timestep(self,target_unit_pressure ='bar'):
+    def get_boundary_conditions_next_timestep(self):
         print('The pressure at the reservoir for the next timestep is', '\n', \
-                pressure_conversion(self.p_boundary_res,self.pressure_unit_print,target_unit_pressure), '\n', \
+                pressure_conversion(self.p_boundary_res,self.pressure_unit,self.pressure_unit_print), '\n', \
             'The velocity at the reservoir for the next timestep is', '\n', \
-                self.v_boundary_res, self.velocity_unit, '\n', \
+                self.v_boundary_res, self.velocity_unit_print, '\n', \
             'The pressure at the turbine for the next timestep is', '\n', \
-                pressure_conversion(self.p_boundary_tur,self.pressure_unit_print,target_unit_pressure), '\n', \
+                pressure_conversion(self.p_boundary_tur,self.pressure_unit,self.pressure_unit_print), '\n', \
             'The velocity at the turbine for the next timestep is', '\n', \
-                self.v_boundary_tur, self.velocity_unit)         
+                self.v_boundary_tur, self.velocity_unit_print)         
 
 
     def timestep_characteristic_method(self):
