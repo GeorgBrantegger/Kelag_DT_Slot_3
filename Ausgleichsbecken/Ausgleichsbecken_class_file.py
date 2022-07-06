@@ -22,7 +22,6 @@ class Ausgleichsbecken_class:
     area_outflux_unit   = r'$\mathrm{m}^2$'
     flux_unit           = r'$\mathrm{m}^3/\mathrm{s}$'
     level_unit          = 'm'
-    pressure_unit       = 'Pa'
     time_unit           = 's'
     volume_unit         = r'$\mathrm{m}^3$'
 
@@ -30,7 +29,6 @@ class Ausgleichsbecken_class:
     area_outflux_unit_print   = 'm²'
     flux_unit_print           = 'm³/s'
     level_unit_print          = 'm'
-    pressure_unit_print       = 'Pa'
     time_unit_print           = 's'
     volume_unit_print         = 'm³'
 
@@ -63,9 +61,14 @@ class Ausgleichsbecken_class:
     def set_outflux(self,outflux):
         self.outflux = outflux
 
+    def set_pressure(self,pressure,pressure_unit,display_pressure_unit):
+        self.pressure               = pressure
+        self.pressure_unit          = pressure_unit
+        self.pressure_unit_print    = display_pressure_unit
 # getter
     def get_info(self, full = False):
         new_line = '\n'
+        p,_ = pressure_conversion(self.pressure,self.pressure_unit,self.pressure_unit_print)
 
         
         if full == True:
@@ -78,8 +81,9 @@ class Ausgleichsbecken_class:
                 f"Critical level low    =       {self.level_min:<10} {self.level_unit_print} {new_line}"
                 f"Critical level high   =       {self.level_max:<10} {self.level_unit_print} {new_line}"
                 f"Volume in reservoir   =       {self.volume:<10} {self.volume_unit_print} {new_line}"
-                f"Current influx        =       {self.influx:<10} {self.flux_unit_print} {new_line}"
+                f"Current influx        =       {self.influx:<10} {self.flux_unit_print} {new_line}" 
                 f"Current outflux       =       {self.outflux:<10} {self.flux_unit_print} {new_line}"
+                f"Current pipe pressure =       {round(p,3):<10} {self.pressure_unit_print} {new_line}"
                 f"Simulation timestep   =       {self.timestep:<10} {self.time_unit_print} {new_line}"
                 f"----------------------------- {new_line}")
         else:
@@ -90,6 +94,7 @@ class Ausgleichsbecken_class:
                 f"Volume in reservoir   =       {self.volume:<10} {self.volume_unit_print} {new_line}"
                 f"Current influx        =       {self.influx:<10} {self.flux_unit_print} {new_line}"
                 f"Current outflux       =       {self.outflux:<10} {self.flux_unit_print} {new_line}"
+                f"Current pipe pressure =       {round(p,3):<10} {self.pressure_unit_print} {new_line}"
                 f"----------------------------- {new_line}")
 
         print(print_str)
@@ -104,19 +109,20 @@ class Ausgleichsbecken_class:
 
 
     def e_RK_4(self):
-        yn = self.outflux/self.area_outflux
-        h = self.level
-        dt = self.timestep
-        p,_ = pressure_conversion(self.pressure,self.pressure_unit,'Pa')
-        # update to include p_halfstep
-        p_hs,_ = pressure_conversion(self.pressure,self.pressure_unit,'Pa')
-        alpha = (self.area_outflux/self.area-1)
-        h_hs = self.update_level(dt/2)
-        Y1 = yn
-        Y2 = yn + dt/2*FODE_function(Y1, h, alpha, self.pressure)
-        Y3 = yn + dt/2*FODE_function(Y2, h_hs, alpha, p_hs)
-        Y4 = yn + dt*FODE_function(Y3, h_hs, alpha, p_hs)
-        ynp1 = yn + dt/6*(FODE_function(Y1, h, alpha, p)+2*FODE_function(Y2, h_hs, alpha, p_hs)+ \
+        yn      = self.outflux/self.area_outflux
+        h       = self.level
+        dt      = self.timestep
+        p       = self.pressure
+        # assume constant pipeline pressure during timestep (see comments in main_programm)
+        p_hs    = self.pressure
+        alpha   = (self.area_outflux/self.area-1)
+        h_hs    = self.update_level(dt/2)
+        # explicit 4 step Runge Kutta
+        Y1      = yn
+        Y2      = yn + dt/2*FODE_function(Y1, h, alpha, self.pressure)
+        Y3      = yn + dt/2*FODE_function(Y2, h_hs, alpha, p_hs)
+        Y4      = yn + dt*FODE_function(Y3, h_hs, alpha, p_hs)
+        ynp1    = yn + dt/6*(FODE_function(Y1, h, alpha, p)+2*FODE_function(Y2, h_hs, alpha, p_hs)+ \
             2*FODE_function(Y3, h_hs, alpha, p_hs)+ FODE_function(Y4, h, alpha, p))
 
         self.outflux = ynp1*self.area_outflux
