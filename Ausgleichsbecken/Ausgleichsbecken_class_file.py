@@ -66,13 +66,14 @@ class Ausgleichsbecken_class:
 # getter
     def get_info(self, full = False):
         new_line = '\n'
+
         
         if full == True:
             # :<10 pads the self.value to be 10 characters wide
             print_str = (f"The cuboid reservoir has the following attributes: {new_line}" 
                 f"----------------------------- {new_line}"
                 f"Base area             =       {self.area:<10} {self.area_unit_print} {new_line}"
-                f"Outflux area          =       {self.area_outflux:<10} {self.area_outflux_unit_print} {new_line}"
+                f"Outflux area          =       {round(self.area_outflux,3):<10} {self.area_outflux_unit_print} {new_line}"
                 f"Current level         =       {self.level:<10} {self.level_unit_print}{new_line}"
                 f"Critical level low    =       {self.level_min:<10} {self.level_unit_print} {new_line}"
                 f"Critical level high   =       {self.level_max:<10} {self.level_unit_print} {new_line}"

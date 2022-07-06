@@ -9,6 +9,8 @@ sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
 
 
+
+
 class Druckrohrleitung_class:
 # units
     acceleration_unit   = r'$\mathrm{m}/\mathrm{s}^2$'
@@ -109,7 +111,9 @@ class Druckrohrleitung_class:
 
 # getter
     def get_info(self):
-        new_line = '\n'
+        new_line    = '\n'
+        angle_deg   = round(self.angle/np.pi*180,3)
+
 
         # :<10 pads the self.value to be 10 characters wide
         print_str = (f"The pipeline has the following attributes: {new_line}" 
@@ -118,13 +122,15 @@ class Druckrohrleitung_class:
             f"Diameter              =       {self.dia:<10} {self.length_unit_print} {new_line}"
             f"Number of segments    =       {self.n_seg:<10} {new_line}"
             f"Number of nodes       =       {self.n_seg+1:<10} {new_line}"
-            f"Length per segments    =       {self.dx:<10} {self.length_unit_print} {new_line}"
+            f"Length per segments   =       {self.dx:<10} {self.length_unit_print} {new_line}"
             f"Pipeline angle        =       {round(self.angle,3):<10} {self.angle_unit_print} {new_line}"
+            f"Pipeline angle        =       {angle_deg}° {new_line}"
             f"Darcy friction factor =       {self.f_D:<10} {new_line}"
             f"Density of liquid     =       {self.density:<10} {self.density_unit_print} {new_line}"
             f"Pressure wave vel.    =       {self.c:<10} {self.velocity_unit_print} {new_line}"
-            f"Simulation timestep  =       {self.dt:<10} {self.time_unit_print } {new_line}"
+            f"Simulation timestep   =       {self.dt:<10} {self.time_unit_print} {new_line}"
             f"Number of timesteps   =       {self.nt:<10} {new_line}"
+            f"Total simulation time =       {self.nt*self.dt:<10} {self.time_unit_print} {new_line}"
             f"----------------------------- {new_line}"
             f"Velocity and pressure distribution are vectors and are accessible by the .v and .p attribute of the pipeline object")
 
@@ -162,14 +168,3 @@ class Druckrohrleitung_class:
 
         self.p_old = self.p.copy()
         self.v_old = self.v.copy()        
-
-
-
-
-
-
-
-
-
-
-
