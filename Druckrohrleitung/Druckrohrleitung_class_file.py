@@ -41,10 +41,10 @@ class Druckrohrleitung_class:
         self.n_seg      = number_segments
         self.angle      = pipeline_angle
         self.f_D        = Darcy_friction_factor     # = Rohrreibungszahl oder flow coefficient        
-        self.density    = 1000
+        self.density    = rho
         self.g          = g
         
-        self.dx      = total_length/number_segments
+        self.dx         = total_length/number_segments
         self.l_vec      = np.arange(0,(number_segments+1)*self.dx,self.dx)
 
         # initialize for get_info method
