@@ -58,11 +58,11 @@ class Ausgleichsbecken_class:
         self.set_volume()
 
     def set_influx(self,influx):
-        self.influx     = influx
+        self.influx = influx
 
     def set_outflux(self,outflux):
         self.outflux        = outflux
-        self.outflux_vel   = outflux/self.area_outflux
+        self.outflux_vel    = outflux/self.area_outflux
 
     def set_pressure(self,pressure,pressure_unit,display_pressure_unit):
         self.pressure               = pressure
