@@ -1,5 +1,4 @@
 import numpy as np
-# from Ausgleichsbecken_functions import FODE_function, get_h_halfstep, get_p_halfstep
 
 #importing pressure conversion function
 import sys
@@ -86,7 +85,7 @@ class Ausgleichsbecken_class:
                 f"Volume in reservoir   =       {self.volume:<10} {self.volume_unit_print} {new_line}"
                 f"Current influx        =       {self.influx:<10} {self.flux_unit_print} {new_line}" 
                 f"Current outflux       =       {self.outflux:<10} {self.flux_unit_print} {new_line}"
-                f"Current outflux vel   =       {self.outflux_vel:<10} {self.velocity_unit_print} {new_line}"
+                f"Current outflux vel   =       {round(self.outflux_vel,3):<10} {self.velocity_unit_print} {new_line}"
                 f"Current pipe pressure =       {round(p,3):<10} {self.pressure_unit_print} {new_line}"
                 f"Simulation timestep   =       {self.timestep:<10} {self.time_unit_print} {new_line}"
                 f"----------------------------- {new_line}")
@@ -98,7 +97,7 @@ class Ausgleichsbecken_class:
                 f"Volume in reservoir   =       {self.volume:<10} {self.volume_unit_print} {new_line}"
                 f"Current influx        =       {self.influx:<10} {self.flux_unit_print} {new_line}"
                 f"Current outflux       =       {self.outflux:<10} {self.flux_unit_print} {new_line}"
-                f"Current outflux vel   =       {self.outflux_vel:<10} {self.velocity_unit_print} {new_line}"
+                f"Current outflux vel   =       {round(self.outflux_vel,3):<10} {self.velocity_unit_print} {new_line}"
                 f"Current pipe pressure =       {round(p,3):<10} {self.pressure_unit_print} {new_line}"
                 f"----------------------------- {new_line}")
 
