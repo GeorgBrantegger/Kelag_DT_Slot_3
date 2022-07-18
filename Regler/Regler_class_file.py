@@ -1,6 +1,45 @@
 import numpy as np
 #based on https://en.wikipedia.org/wiki/PID_controller#Discrete_implementation
 
+def trap_int(vec,timestep):
+    l = np.size(vec)
+    int = 0
+    for i in range(l-1):
+        int = int + (vec[i]+vec[i+1])/2*timestep
+    return int
+
+
+def ISE_fun(error_history,timestep):
+    # calcuate the integral of square error
+    e = np.array(error_history)
+    dt = timestep
+    ise = trap_int(e**2,dt)
+    return ise
+
+def IAE_fun(error_history,timestep):
+    # calcuate the integral of absolute error
+    e = np.array(error_history)
+    dt = timestep
+    iae = trap_int(np.abs(e),dt)
+    return iae    
+
+def ITSE_fun(error_history,timestep):
+    # calcuate the integral of time multiply square error
+    e = np.array(error_history)
+    dt = timestep
+    n = np.size(e)
+    t = np.arange(0,n)*dt
+    itse = trap_int(t*e**2,dt)
+    return itse
+
+def ITAE_fun(error_history,timestep):
+    # calcuate the integral of time multiply absolute error
+    e = np.array(error_history)
+    dt = timestep
+    n = np.size(e)
+    t = np.arange(0,n)*dt    
+    itae = trap_int(np.abs(e),dt)
+    return itae    
 
 class P_controller_class:
     def __init__(self,setpoint,proportionality_constant):
@@ -32,4 +71,60 @@ class P_controller_class:
         return new_control
 
 
+class PI_controller_class:
+    def __init__(self,setpoint,proportionality_constant,Ti, timestep):
+        self.SP = setpoint
+        self.Kp = proportionality_constant
+        self.Ti = Ti
+        self.dt = timestep
+        self.error_history = [0,0] 
 
+        self.control_variable = 0.0
+        self.lower_limit = -1.3   # default
+        self.upper_limit = +1.3   # default
+
+    def set_control_variable_limits(self,lower_limit,upper_limit):
+        self.lower_limit = lower_limit
+        self.upper_limit = upper_limit
+
+    def calculate_error(self,process_variable):
+        self.error = self.SP-process_variable
+        self.error_history.append(self.error)
+
+    def get_control_variable(self):
+        cv = self.control_variable
+        Kp = self.Kp
+        Ti = self.Ti
+        dt = self.dt
+
+        e0 = self.error_history[-1]
+        e1 = self.error_history[-2] 
+        new_control = cv+Kp*(e0-e1)+dt/Ti*e0
+        if new_control < self.lower_limit:
+            new_control = self.lower_limit
+
+        if new_control > self.upper_limit:
+            new_control = self.upper_limit
+
+        self.control_variable = new_control
+        # print(new_control)
+        return new_control
+
+    def get_performance_indicators(self,ISE=True,IAE=True,ITSE=True,ITAE=True):
+        ise     = np.nan
+        iae     = np.nan
+        itse    = np.nan
+        itae    = np.nan
+
+        if ISE == True:
+            ise = ISE_fun(self.error_history[2:],self.dt)
+        if IAE == True:
+            iae = IAE_fun(self.error_history[2:],self.dt)
+        if ITSE == True:
+            itse = ITSE_fun(self.error_history[2:],self.dt)
+        if ITAE == True:
+            itae = ITAE_fun(self.error_history[2:],self.dt)
+
+        return ise,iae,itse,itae
+
+    
