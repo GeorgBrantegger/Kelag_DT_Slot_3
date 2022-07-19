@@ -42,33 +42,35 @@ def ITAE_fun(error_history,timestep):
     return itae    
 
 class P_controller_class:
-    def __init__(self,setpoint,proportionality_constant):
-        self.SP = setpoint
-        self.Kp = proportionality_constant
-        self.error_history = [] 
-        self.control_variable = 0.1
-        self.lower_limit = -0.1   # default
-        self.upper_limit = +0.1   # default
+    # def __init__(self,setpoint,proportionality_constant):
+    #     self.SP = setpoint
+    #     self.Kp = proportionality_constant
+    #     self.error_history = [] 
+    #     self.control_variable = 0.1
+    #     self.lower_limit = -0.1   # default
+    #     self.upper_limit = +0.1   # default
 
-    def set_control_variable_limits(self,lower_limit,upper_limit):
-        self.lower_limit = lower_limit
-        self.upper_limit = upper_limit
+    # def set_control_variable_limits(self,lower_limit,upper_limit):
+    #     self.lower_limit = lower_limit
+    #     self.upper_limit = upper_limit
 
-    def calculate_error(self,process_variable):
-        self.error = self.SP-process_variable
-        self.error_history.append(self.error)
+    # def calculate_error(self,process_variable):
+    #     self.error = self.SP-process_variable
+    #     self.error_history.append(self.error)
 
-    def get_control_variable(self):
-        new_control = self.control_variable+self.Kp*(self.error_history[-1]-self.error_history[-2])
-        if new_control < self.lower_limit:
-            new_control = self.lower_limit
+    # def get_control_variable(self):
+    #     new_control = self.control_variable+self.Kp*(self.error_history[-1]-self.error_history[-2])
+    #     if new_control < self.lower_limit:
+    #         new_control = self.lower_limit
 
-        if new_control > self.upper_limit:
-            new_control = self.upper_limit
+    #     if new_control > self.upper_limit:
+    #         new_control = self.upper_limit
 
-        self.control_variable = new_control
-        # print(new_control)
-        return new_control
+    #     self.control_variable = new_control
+    #     # print(new_control)
+    #     return new_control
+    def __init__(self):
+        pass
 
 
 class PI_controller_class:
@@ -77,21 +79,25 @@ class PI_controller_class:
         self.Kp = proportionality_constant
         self.Ti = Ti
         self.dt = timestep
-        self.error_history = [0,0] 
+        self.error_history = [0] 
 
         self.control_variable = 0.0
-        self.lower_limit = -1.3   # default
-        self.upper_limit = +1.3   # default
+        self.cv_lower_limit = -1   # default
+        self.cv_upper_limit = +1   # default
+
 
     def set_control_variable_limits(self,lower_limit,upper_limit):
-        self.lower_limit = lower_limit
-        self.upper_limit = upper_limit
+        self.cv_lower_limit = lower_limit
+        self.cv_upper_limit = upper_limit
 
     def calculate_error(self,process_variable):
         self.error = self.SP-process_variable
         self.error_history.append(self.error)
 
     def get_control_variable(self):
+        # if np.isclose(self.error,0,atol = 0.1):
+        #     self.control_variable = 0
+
         cv = self.control_variable
         Kp = self.Kp
         Ti = self.Ti
@@ -100,15 +106,14 @@ class PI_controller_class:
         e0 = self.error_history[-1]
         e1 = self.error_history[-2] 
         new_control = cv+Kp*(e0-e1)+dt/Ti*e0
-        if new_control < self.lower_limit:
-            new_control = self.lower_limit
+        if new_control < self.cv_lower_limit:
+            new_control = self.cv_lower_limit
 
-        if new_control > self.upper_limit:
-            new_control = self.upper_limit
+        if new_control > self.cv_upper_limit:
+            new_control = self.cv_upper_limit
 
         self.control_variable = new_control
-        # print(new_control)
-        return new_control
+        return self.control_variable
 
     def get_performance_indicators(self,ISE=True,IAE=True,ITSE=True,ITAE=True):
         ise     = np.nan
@@ -116,14 +121,16 @@ class PI_controller_class:
         itse    = np.nan
         itae    = np.nan
 
+        # self.error_history[1:] because the first value of the error history is set to [0]
+        #   to avoid special case handling in the calculation of the controll variable
         if ISE == True:
-            ise = ISE_fun(self.error_history[2:],self.dt)
+            ise = ISE_fun(self.error_history[1:],self.dt)
         if IAE == True:
-            iae = IAE_fun(self.error_history[2:],self.dt)
+            iae = IAE_fun(self.error_history[1:],self.dt)
         if ITSE == True:
-            itse = ITSE_fun(self.error_history[2:],self.dt)
+            itse = ITSE_fun(self.error_history[1:],self.dt)
         if ITAE == True:
-            itae = ITAE_fun(self.error_history[2:],self.dt)
+            itae = ITAE_fun(self.error_history[1:],self.dt)
 
         return ise,iae,itse,itae
 
