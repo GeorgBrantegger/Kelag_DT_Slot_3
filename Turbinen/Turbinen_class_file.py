@@ -1,7 +1,4 @@
-from matplotlib.pyplot import fill
 import numpy as np
-from scipy.interpolate import interp2d
-
 #importing pressure conversion function
 import sys
 import os
@@ -10,21 +7,28 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
 
-class Francis_turbine_class:
-    def __init__(self,CSV_name='Durchflusskennlinie.csv'):
-        self.raw_csv = np.genfromtxt(CSV_name,delimiter=',')
-        
-    def extract_csv(self,CSV_pressure_unit='bar'):
-        self.raw_ps_vec,_    = pressure_conversion(self.raw_csv[0,1:],CSV_pressure_unit,'Pa')
-        self.raw_LA_vec     = self.raw_csv[1:,0]
-        self.raw_Qs_mat      = self.raw_csv[1:,1:]
+class Francis_Turbine:
+    def __init__(self, Q_nenn,p_nenn):
+        self.Q_n    = Q_nenn
+        self.p_n    = p_nenn
+        self.LA_n   = 1. # 100%
+        h,_ = pressure_conversion(p_nenn,'Pa','MWs')
+        self.A      = Q_nenn/(np.sqrt(2*9.81*h)*0.98)
 
-    def get_Q_fun(self):
-        Q_fun = interp2d(self.raw_ps_vec,self.raw_LA_vec,self.raw_Qs_mat,bounds_error=False,fill_value=None)
-        return Q_fun
+    def set_LA(self,LA):
+        self.LA = LA
 
+    def get_Q(self,p):
+        self.Q = self.Q_n*(self.LA/self.LA_n)*np.sqrt(p/self.p_n)
+        return self.Q
 
+    def set_closing_time(self,t_closing):
+        self.t_c = t_closing
+        self.d_LA_max_dt = 1/t_closing
 
-
-
-
+    def change_LA(self,LA_soll,timestep):
+        LA_diff = self.LA-LA_soll
+        LA_diff_max = self.d_LA_max_dt*timestep
+        if abs(LA_diff) > LA_diff_max:
+            LA_diff = np.sign(LA_diff)*LA_diff_max
+        self.LA = self.LA-LA_diff
