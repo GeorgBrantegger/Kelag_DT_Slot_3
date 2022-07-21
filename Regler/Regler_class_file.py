@@ -74,15 +74,15 @@ class P_controller_class:
 
 
 class PI_controller_class:
-    def __init__(self,setpoint,proportionality_constant,Ti, timestep):
+    def __init__(self,setpoint,deadband,proportionality_constant,Ti, timestep):
         self.SP = setpoint
+        self.db = deadband
         self.Kp = proportionality_constant
         self.Ti = Ti
         self.dt = timestep
         self.error_history = [0] 
 
-        self.control_variable = 0.0
-        self.cv_lower_limit = -1   # default
+        self.cv_lower_limit = 0   # default
         self.cv_upper_limit = +1   # default
 
 
@@ -91,12 +91,12 @@ class PI_controller_class:
         self.cv_upper_limit = upper_limit
 
     def calculate_error(self,process_variable):
-        self.error = self.SP-process_variable
+        self.error = process_variable-self.SP
         self.error_history.append(self.error)
 
-    def get_control_variable(self):
-        # if np.isclose(self.error,0,atol = 0.1):
-        #     self.control_variable = 0
+    def get_control_variable(self,process_variable):
+
+        self.calculate_error(process_variable)
 
         cv = self.control_variable
         Kp = self.Kp
@@ -105,7 +105,11 @@ class PI_controller_class:
 
         e0 = self.error_history[-1]
         e1 = self.error_history[-2] 
-        new_control = cv+Kp*(e0-e1)+dt/Ti*e0
+        if abs(self.error) > self.db:
+            new_control = cv+Kp*(e0-e1)+dt/Ti*e0
+        else:
+            new_control = cv
+
         if new_control < self.cv_lower_limit:
             new_control = self.cv_lower_limit
 
