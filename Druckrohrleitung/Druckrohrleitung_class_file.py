@@ -41,7 +41,7 @@ class Druckrohrleitung_class:
         self.n_seg      = number_segments
         self.angle      = pipeline_angle
         self.f_D        = Darcy_friction_factor     # = Rohrreibungszahl oder flow coefficient        
-        self.density    = 1000
+        self.rho        = rho
         self.g          = g
         
         self.dx      = total_length/number_segments
@@ -89,8 +89,8 @@ class Druckrohrleitung_class:
         self.v_old = self.v0.copy()
         self.v = np.empty_like(self.v_old)
     
-    def set_boundary_conditions_next_timestep(self,v_reservoir,p_reservoir,v_turbine,input_unit_pressure = 'Pa'):
-        rho                     = self.density
+    def set_boundary_conditions_next_timestep(self,v_reservoir,p_reservoir,v_turbine):
+        rho                     = self.rho
         c                       = self.c
         f_D                     = self.f_D
         dt                      = self.dt
@@ -107,6 +107,14 @@ class Druckrohrleitung_class:
         self.v[-1]              = self.v_boundary_tur.copy()
         self.p[0]               = self.p_boundary_res.copy()
         self.p[-1]              = self.p_boundary_tur.copy()
+
+
+    def set_steady_state(self,ss_flux,ss_level_reservoir,pl_vec,h_vec,pressure_unit,display_pressure_unit):
+        ss_v0 = np.full(self.n_seg+1,ss_flux/(self.dia**2/4*np.pi))
+        ss_pressure = (self.rho*self.g*(ss_level_reservoir+h_vec)-ss_v0**2*self.rho/2)-(self.f_D*pl_vec/self.dia*self.rho/2*ss_v0**2)
+
+        self.set_initial_flow_velocity(ss_v0)
+        self.set_initial_pressure(ss_pressure,pressure_unit,display_pressure_unit)
 
 # getter
     def get_info(self):
@@ -150,7 +158,7 @@ class Druckrohrleitung_class:
     def timestep_characteristic_method(self):
         #number of nodes
         nn      = self.n_seg+1
-        rho     = self.density
+        rho     = self.rho
         c       = self.c
         f_D     = self.f_D
         dt      = self.dt

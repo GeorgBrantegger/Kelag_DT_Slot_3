@@ -33,6 +33,9 @@ class Ausgleichsbecken_class:
     velocity_unit_print     = 'm/s'
     volume_unit_print       = 'm³'
 
+    g = 9.81 # m/s²
+    rho = 1000 # kg/m³
+
 # init
     def __init__(self,area,outflux_area,level_min = 0,level_max = np.inf ,timestep = 1):
         self.area           = area              # base area of the rectangular structure
@@ -67,6 +70,16 @@ class Ausgleichsbecken_class:
         self.pressure               = pressure
         self.pressure_unit          = pressure_unit
         self.pressure_unit_print    = display_pressure_unit
+
+    def set_steady_state(self,ss_influx,ss_level,pressure_unit,display_pressure_unit):
+        ss_outflux = ss_influx
+        ss_outflux_vel = ss_outflux/self.area_outflux
+        ss_pressure = self.rho*self.g*ss_level-ss_outflux_vel**2*self.rho/2
+
+        self.set_initial_level(ss_level)
+        self.set_influx(ss_influx)
+        self.set_outflux(ss_outflux)
+        self.set_pressure(ss_pressure,pressure_unit,display_pressure_unit)
 # getter
     def get_info(self, full = False):
         new_line = '\n'

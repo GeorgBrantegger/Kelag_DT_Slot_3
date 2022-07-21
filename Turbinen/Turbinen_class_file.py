@@ -32,3 +32,9 @@ class Francis_Turbine:
         if abs(LA_diff) > LA_diff_max:
             LA_diff = np.sign(LA_diff)*LA_diff_max
         self.LA = self.LA-LA_diff
+
+    def set_steady_state(self,ss_flux,ss_pressure):
+        ss_LA = self.LA_n*ss_flux/self.Q_n*np.sqrt(self.p_n/ss_pressure)
+        self.set_LA(ss_LA)
+        if ss_LA < 0 or ss_LA > 1:
+            print('LA out of range')
