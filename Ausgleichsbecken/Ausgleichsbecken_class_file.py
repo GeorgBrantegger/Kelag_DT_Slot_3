@@ -1,5 +1,4 @@
 import numpy as np
-# from Ausgleichsbecken_functions import FODE_function, get_h_halfstep, get_p_halfstep
 
 #importing pressure conversion function
 import sys
@@ -34,6 +33,9 @@ class Ausgleichsbecken_class:
     velocity_unit_print     = 'm/s'
     volume_unit_print       = 'm³'
 
+    g = 9.81 # m/s²
+    rho = 1000 # kg/m³
+
 # init
     def __init__(self,area,outflux_area,level_min = 0,level_max = np.inf ,timestep = 1):
         self.area           = area              # base area of the rectangular structure
@@ -58,16 +60,26 @@ class Ausgleichsbecken_class:
         self.set_volume()
 
     def set_influx(self,influx):
-        self.influx     = influx
+        self.influx = influx
 
     def set_outflux(self,outflux):
         self.outflux        = outflux
-        self.outflux_vel   = outflux/self.area_outflux
+        self.outflux_vel    = outflux/self.area_outflux
 
     def set_pressure(self,pressure,pressure_unit,display_pressure_unit):
         self.pressure               = pressure
         self.pressure_unit          = pressure_unit
         self.pressure_unit_print    = display_pressure_unit
+
+    def set_steady_state(self,ss_influx,ss_level,pressure_unit,display_pressure_unit):
+        ss_outflux = ss_influx
+        ss_outflux_vel = ss_outflux/self.area_outflux
+        ss_pressure = self.rho*self.g*ss_level-ss_outflux_vel**2*self.rho/2
+
+        self.set_initial_level(ss_level)
+        self.set_influx(ss_influx)
+        self.set_outflux(ss_outflux)
+        self.set_pressure(ss_pressure,pressure_unit,display_pressure_unit)
 # getter
     def get_info(self, full = False):
         new_line = '\n'
@@ -86,7 +98,7 @@ class Ausgleichsbecken_class:
                 f"Volume in reservoir   =       {self.volume:<10} {self.volume_unit_print} {new_line}"
                 f"Current influx        =       {self.influx:<10} {self.flux_unit_print} {new_line}" 
                 f"Current outflux       =       {self.outflux:<10} {self.flux_unit_print} {new_line}"
-                f"Current outflux vel   =       {self.outflux_vel:<10} {self.velocity_unit_print} {new_line}"
+                f"Current outflux vel   =       {round(self.outflux_vel,3):<10} {self.velocity_unit_print} {new_line}"
                 f"Current pipe pressure =       {round(p,3):<10} {self.pressure_unit_print} {new_line}"
                 f"Simulation timestep   =       {self.timestep:<10} {self.time_unit_print} {new_line}"
                 f"----------------------------- {new_line}")
@@ -98,7 +110,7 @@ class Ausgleichsbecken_class:
                 f"Volume in reservoir   =       {self.volume:<10} {self.volume_unit_print} {new_line}"
                 f"Current influx        =       {self.influx:<10} {self.flux_unit_print} {new_line}"
                 f"Current outflux       =       {self.outflux:<10} {self.flux_unit_print} {new_line}"
-                f"Current outflux vel   =       {self.outflux_vel:<10} {self.velocity_unit_print} {new_line}"
+                f"Current outflux vel   =       {round(self.outflux_vel,3):<10} {self.velocity_unit_print} {new_line}"
                 f"Current pipe pressure =       {round(p,3):<10} {self.pressure_unit_print} {new_line}"
                 f"----------------------------- {new_line}")
 

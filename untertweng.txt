@@ -1,0 +1,22 @@
+L = 535 m dn 800 mm
+478 m dn 1000 mm
+Ersatzdurchmesser
+
+h_pipe
+
+h 851.78 Pegel + Leitungsgefälle
+Leitungsgefälle: 113
+
+Fläche 4.25x10.5 + 30m² = 74 m²
+Pegelminimum: 851.18 m 
+
+Unterwasserpegel 738.56
+Gesamtfallhöhe = 851.78-738.56
+
+Rohrreibung: 0.014 f_D = lambda
+c = 500 m/s
+
+Q_0 = 100%*0.75+30%*0.75
+Q_extrem = 30%*0.75
+
+Q = LA*Q_nenn*sqrt(H/H_n)
