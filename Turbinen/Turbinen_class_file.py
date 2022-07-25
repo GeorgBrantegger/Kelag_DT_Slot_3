@@ -12,14 +12,16 @@ class Francis_Turbine:
         self.Q_n    = Q_nenn
         self.p_n    = p_nenn
         self.LA_n   = 1. # 100%
-        h,_ = pressure_conversion(p_nenn,'Pa','MWs')
+        h           = pressure_conversion(p_nenn,'Pa','MWs')
         self.A      = Q_nenn/(np.sqrt(2*9.81*h)*0.98)
 
     def set_LA(self,LA):
         self.LA = LA
+    def set_pressure(self,pressure):
+        self.p = pressure
 
-    def get_Q(self,p):
-        self.Q = self.Q_n*(self.LA/self.LA_n)*np.sqrt(p/self.p_n)
+    def get_Q(self):
+        self.Q = self.Q_n*(self.LA/self.LA_n)*np.sqrt(self.p/self.p_n)
         return self.Q
 
     def set_closing_time(self,t_closing):
