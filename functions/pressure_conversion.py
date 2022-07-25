@@ -32,7 +32,7 @@ def pa_to_atm(p):
 def pa_to_psi(p):
     return p/6894.8
 
-def pressure_conversion(pressure, input_unit = 'bar', target_unit = 'Pa'):
+def pressure_conversion(pressure, input_unit = 'bar', target_unit = 'Pa', return_unit = False):
     p = pressure
     if input_unit.lower()   == 'bar':
         p_pa = bar_to_pa(p)
@@ -50,19 +50,26 @@ def pressure_conversion(pressure, input_unit = 'bar', target_unit = 'Pa'):
         raise Exception('Given input unit not recognised. \n Known units are: Pa, bar, mWs, Torr, atm, psi')
     
     if target_unit.lower()      == 'bar':
-        return pa_to_bar(p_pa), target_unit
+        return_vec =  [pa_to_bar(p_pa), target_unit]
     elif target_unit.lower()    == 'mws':
-        return pa_to_mWS(p_pa), target_unit
+        return_vec =  [pa_to_mWS(p_pa), target_unit]
     elif target_unit.lower()    == 'torr':
-        return pa_to_torr(p_pa), target_unit
+        return_vec =  [pa_to_torr(p_pa), target_unit]
     elif target_unit.lower()    == 'atm':
-        return pa_to_atm(p_pa), target_unit
+        return_vec =  [pa_to_atm(p_pa), target_unit]
     elif target_unit.lower()    =='psi':
-        return pa_to_psi(p_pa), target_unit
+        return_vec =  [pa_to_psi(p_pa), target_unit]
     elif target_unit.lower()    == 'pa':
-        return p_pa, target_unit
+        return_vec =  [p_pa, target_unit]
     else:
         raise Exception('Given target unit not recognised. \n Known units are: Pa, bar, mWs, Torr, atm, psi')
+
+    if return_unit == True:
+        # return with pressure unit
+        return return_vec
+    else:
+        # return without pressure unit
+        return return_vec[0]
 
 # testing_pressure_conversion
 if __name__ == '__main__':
@@ -72,6 +79,6 @@ if __name__ == '__main__':
 
     for input_unit in unit_dict:
         for target_unit in unit_dict:
-            converted_p = pressure_conversion(p,input_unit,target_unit)
+            converted_p = pressure_conversion(p,input_unit,target_unit,return_unit=False)
             print(input_unit,target_unit)
             print(converted_p)
