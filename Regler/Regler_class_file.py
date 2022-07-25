@@ -115,7 +115,6 @@ class PI_controller_class:
 
         if new_control > self.cv_upper_limit:
             new_control = self.cv_upper_limit
-
         self.control_variable = new_control
         return self.control_variable
 
