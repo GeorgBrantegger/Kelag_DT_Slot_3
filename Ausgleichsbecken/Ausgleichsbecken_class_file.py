@@ -44,8 +44,8 @@ class Ausgleichsbecken_class:
     density_unit_print      = 'kg/m³'
     flux_unit_print         = 'm³/s'
     level_unit_print        = 'm'
-    time_unit_print         = 's'
     pressure_unit_print     = '--' # will be set by .set_pressure() method
+    time_unit_print         = 's'
     velocity_unit_print     = 'm/s'
     volume_unit_print       = 'm³'
 
@@ -102,8 +102,7 @@ class Ausgleichsbecken_class:
         # set the steady state (ss) condition in which the net flux is zero
             # set pressure acting on the outflux area so that the level stays constant
         ss_outflux = ss_influx
-        ss_outflux_vel = ss_outflux/self.area_outflux
-        ss_pressure = self.density*self.g*ss_level-ss_outflux_vel**2*self.density/2
+        ss_pressure = self.density*self.g*ss_level-(ss_outflux/self.area_outflux)**2*self.density/2
 
         self.set_influx(ss_influx)
         self.set_initial_level(ss_level)
@@ -169,6 +168,9 @@ class Ausgleichsbecken_class:
     def update_level(self,timestep):
         # update level based on net flux and timestep by calculating the volume change in
             # the timestep and the converting the new volume to a level by assuming a cuboid reservoir
+        
+        # cannot set new level directly in this method, because it gets called to calcuate during the Runge Kutta
+            # to calculate a ficticious level at half the timestep
         net_flux = self.influx-self.outflux
         delta_V = net_flux*timestep
         new_level = (self.volume+delta_V)/self.area
@@ -178,31 +180,32 @@ class Ausgleichsbecken_class:
         # sets volume in reservoir based on self.level
         return self.level*self.area 
 
+    def update_pressure(self):
+        p_new = self.density*self.g*self.level-(self.outflux/self.area_outflux)**2*self.density/2
+        return p_new
 
     def timestep_reservoir_evolution(self):
         # update outflux and outflux velocity based on current pipeline pressure and waterlevel in reservoir
-        yn      = self.outflux/self.area_outflux # outflux velocity
-        h       = self.level
         dt      = self.timestep
-        p       = self.pressure
-        # assume constant pipeline pressure during timestep
-            # e_RK_4 timestep is way smalle than timestep of characteristic method, so this should be a valid approx.
-            # (furthermore I have no idea how to approximate p_hs otherwise :/ )
-        p_hs    = self.pressure
-        A_a     = self.area_outflux
-        A       = self.area
-        h_hs    = self.update_level(dt/2)
         rho     = self.density
         g       = self.g
+        A       = self.area
+        A_a     = self.area_outflux
+        yn      = self.outflux/A_a # outflux velocity
+        h       = self.level
+        h_hs    = self.update_level(dt/2)
+        p       = self.pressure
+        p_hs    = self.pressure + rho*g*(h_hs-h)
         # explicit 4 step Runge Kutta
         Y1      = yn
-        Y2      = yn + dt/2*FODE_function(Y1,h,A,A_a,self.pressure,rho,g)
+        Y2      = yn + dt/2*FODE_function(Y1,h,A,A_a,p,rho,g)
         Y3      = yn + dt/2*FODE_function(Y2,h_hs,A,A_a,p_hs,rho,g)
         Y4      = yn + dt*FODE_function(Y3,h_hs,A,A_a,p_hs,rho,g)
         ynp1    = yn + dt/6*(FODE_function(Y1,h,A,A_a,p,rho,g)+2*FODE_function(Y2,h_hs,A,A_a,p_hs,rho,g)+ \
             2*FODE_function(Y3,h_hs,A,A_a,p_hs,rho,g)+ FODE_function(Y4,h,A,A_a,p,rho,g))
 
-        self.outflux    = ynp1*self.area_outflux
+        self.outflux    = ynp1*A_a
         self.level      = self.update_level(dt)
         self.volume     = self.update_volume()
+        self.pressure   = self.update_pressure()
         

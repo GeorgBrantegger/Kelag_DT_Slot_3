@@ -33,6 +33,8 @@ class Druckrohrleitung_class:
         self.density    = rho                                           # density of the liquid in the pipeline
         self.g          = g                                             # gravitational acceleration
         
+        self.A          = (diameter/2)**2*np.pi
+
         self.dx         = total_length/number_segments                  # length of each segment
         self.l_vec      = np.arange(0,(number_segments+1),1)*self.dx    # vector giving the distance from each node to the start of the pipeline
 
@@ -98,23 +100,22 @@ class Druckrohrleitung_class:
         p_old_res               = self.p_old[1]     # @ second  node (the one after the reservoir)
         v_old_res               = self.v_old[1]     # @ second  node (the one after the reservoir)
         # set the boundary conditions derived from reservoir and turbine
-        self.v_boundary_tur     = v_turbine         # at new timestep
-        self.p_boundary_res     = p_reservoir       # at new timestep
+        v_boundary_tur      = v_turbine         # at new timestep
+        p_boundary_res      = p_reservoir       # at new timestep
         # calculate the missing boundary conditions
-        self.v_boundary_res     = v_old_res+1/(rho*c)*(p_reservoir-p_old_res)+dt*g*np.sin(alpha)-f_D*dt/(2*D)*abs(v_old_res)*v_old_res
-        self.p_boundary_tur     = p_old_tur-rho*c*(v_turbine-v_old_tur)+rho*c*dt*g*np.sin(alpha)-f_D*rho*c*dt/(2*D)*abs(v_old_tur)*v_old_tur
+        v_boundary_res      = v_old_res+1/(rho*c)*(p_boundary_res-p_old_res)+dt*g*np.sin(alpha)-f_D*dt/(2*D)*abs(v_old_res)*v_old_res
+        p_boundary_tur      = p_old_tur-rho*c*(v_boundary_tur-v_old_tur)+rho*c*dt*g*np.sin(alpha)-f_D*rho*c*dt/(2*D)*abs(v_old_tur)*v_old_tur
 
         # write boundary conditions to the velocity/pressure vectors of the next timestep
-        self.v[0]               = self.v_boundary_res.copy()
-        self.v[-1]              = self.v_boundary_tur.copy()
-        self.p[0]               = self.p_boundary_res.copy()
-        self.p[-1]              = self.p_boundary_tur.copy()
-
+        self.v[0]           = v_boundary_res
+        self.v[-1]          = v_boundary_tur
+        self.p[0]           = p_boundary_res
+        self.p[-1]          = p_boundary_tur
 
     def set_steady_state(self,ss_flux,ss_level_reservoir,pl_vec,h_vec):
         # set the pressure and velocity distributions, that allow a constant flow of water from the (steady-state) reservoir to the (steady-state) turbine
             # the flow velocity is given by the constant flow through the pipe
-        ss_v0 = np.full(self.n_seg+1,ss_flux/(self.dia**2/4*np.pi))
+        ss_v0 = np.full(self.n_seg+1,ss_flux/self.A)
             # the static pressure is given by the hydrostatic pressure, corrected for friction losses and dynamic pressure
         ss_pressure = (self.density*self.g*(ss_level_reservoir+h_vec)-ss_v0**2*self.density/2)-(self.f_D*pl_vec/self.dia*self.density/2*ss_v0**2)
 
