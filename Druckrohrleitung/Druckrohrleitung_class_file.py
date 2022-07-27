@@ -88,17 +88,17 @@ class Druckrohrleitung_class:
             # the velocity at the reservoir will be calculated using the backward characteristic
 
         # constants for a cleaner formula
-        rho                     = self.density
-        c                       = self.c
-        f_D                     = self.f_D
-        dt                      = self.dt
-        D                       = self.dia
-        g                       = self.g
-        alpha                   = self.angle
-        p_old_tur               = self.p_old[-2]    # @ second to last node (the one before the turbine)
-        v_old_tur               = self.v_old[-2]    # @ second to last node (the one before the turbine)
-        p_old_res               = self.p_old[1]     # @ second  node (the one after the reservoir)
-        v_old_res               = self.v_old[1]     # @ second  node (the one after the reservoir)
+        rho                 = self.density
+        c                   = self.c
+        f_D                 = self.f_D
+        dt                  = self.dt
+        D                   = self.dia
+        g                   = self.g
+        alpha               = self.angle
+        p_old_tur           = self.p_old[-2]    # @ second to last node (the one before the turbine)
+        v_old_tur           = self.v_old[-2]    # @ second to last node (the one before the turbine)
+        p_old_res           = self.p_old[1]     # @ second  node (the one after the reservoir)
+        v_old_res           = self.v_old[1]     # @ second  node (the one after the reservoir)
         # set the boundary conditions derived from reservoir and turbine
         v_boundary_tur      = v_turbine         # at new timestep
         p_boundary_res      = p_reservoir       # at new timestep
@@ -117,7 +117,7 @@ class Druckrohrleitung_class:
             # the flow velocity is given by the constant flow through the pipe
         ss_v0 = np.full(self.n_seg+1,ss_flux/self.A)
             # the static pressure is given by the hydrostatic pressure, corrected for friction losses and dynamic pressure
-        ss_pressure = (self.density*self.g*(ss_level_reservoir+h_vec)-ss_v0**2*self.density/2)-(self.f_D*pl_vec/self.dia*self.density/2*ss_v0**2)
+        ss_pressure = self.density*self.g*(ss_level_reservoir+h_vec)-ss_v0**2*self.density/2-(self.f_D*pl_vec/self.dia*self.density/2*ss_v0**2)
 
         self.set_initial_flow_velocity(ss_v0)
         self.set_initial_pressure(ss_pressure)
