@@ -21,7 +21,7 @@ def FODE_function(x,h,A,A_a,p,rho,g):
     # A         ... Reservoir_Area
     # g         ... gravitational acceleration
     # rho       ... density of the liquid in the reservoir 
-    f = x*abs(x)/h*(A_a/A-1)+g-p/(rho*h)
+    f = x*abs(x)/h*(A_a/A-1.5)+g-p/(rho*h)
     return f
 
 
