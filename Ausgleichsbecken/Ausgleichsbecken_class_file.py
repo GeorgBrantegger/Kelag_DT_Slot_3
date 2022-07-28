@@ -9,19 +9,19 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
 
-def FODE_function(x,h,A,A_a,p,rho,g):
+def FODE_function(x_out,h,A,A_a,p,rho,g):
     # (FODE     ... first order differential equation)
     # based on the outflux formula by Andreas Malcherek
         # https://www.youtube.com/watch?v=8HO2LwqOhqQ
         # adapted for a pressurized pipeline into which the reservoir effuses
             # and flow direction
-    # x         ... effusion velocity
+    # x_out         ... effusion velocity
     # h         ... level in the reservoir
     # A_a       ... Outflux_Area
     # A         ... Reservoir_Area
     # g         ... gravitational acceleration
     # rho       ... density of the liquid in the reservoir 
-    f = x*abs(x)/h*(A_a/A-1.)+g-p/(rho*h)
+    f = x_out*abs(x_out)/h*(A_a/A-1.)+g-p/(rho*h)
     return f
 
 
@@ -101,8 +101,10 @@ class Ausgleichsbecken_class:
     def set_steady_state(self,ss_influx,ss_level,display_pressure_unit):
         # set the steady state (ss) condition in which the net flux is zero
             # set pressure acting on the outflux area so that the level stays constant
-        ss_outflux = ss_influx
-        ss_pressure = self.density*self.g*ss_level-(ss_outflux/self.area_outflux)**2*self.density/2
+        ss_outflux  = ss_influx
+        ss_influx_vel = ss_influx/self.area
+        ss_outflux_vel = ss_outflux/self.area_outflux
+        ss_pressure = self.density*self.g*ss_level+self.density*ss_outflux_vel*(ss_influx_vel-ss_outflux_vel)
 
         self.set_influx(ss_influx)
         self.set_initial_level(ss_level)
@@ -181,7 +183,10 @@ class Ausgleichsbecken_class:
         return self.level*self.area 
 
     def update_pressure(self):
-        p_new = self.density*self.g*self.level-(self.outflux/self.area_outflux)**2*self.density/2
+        influx_vel = self.influx/self.area
+        outflux_vel = self.outflux/self.area_outflux
+        p_new = self.density*self.g*self.level+self.density*outflux_vel*(influx_vel-outflux_vel)
+        
         return p_new
 
     def timestep_reservoir_evolution(self):
