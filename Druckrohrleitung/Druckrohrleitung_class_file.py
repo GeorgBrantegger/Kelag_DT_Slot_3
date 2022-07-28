@@ -112,12 +112,16 @@ class Druckrohrleitung_class:
         self.p[0]           = p_boundary_res
         self.p[-1]          = p_boundary_tur
 
-    def set_steady_state(self,ss_flux,ss_level_reservoir,pl_vec,h_vec):
+    def set_steady_state(self,ss_flux,ss_level_reservoir,area_reservoir,pl_vec,h_vec):
         # set the pressure and velocity distributions, that allow a constant flow of water from the (steady-state) reservoir to the (steady-state) turbine
             # the flow velocity is given by the constant flow through the pipe
         ss_v0 = np.full(self.n_seg+1,ss_flux/self.A)
-            # the static pressure is given by the hydrostatic pressure, corrected for friction losses and dynamic pressure
-        ss_pressure = self.density*self.g*(ss_level_reservoir+h_vec)-ss_v0**2*self.density/2-(self.f_D*pl_vec/self.dia*self.density/2*ss_v0**2)
+
+        # the static pressure is given by static state pressure of the reservoir, corrected for the hydraulic head of the pipe and friction losses
+        ss_v_in_res     = ss_flux/area_reservoir
+        ss_v_out_res    = ss_flux/self.A
+        ss_pressure_res = self.density*self.g*(ss_level_reservoir)+self.density*ss_v_out_res*(ss_v_in_res-ss_v_out_res)
+        ss_pressure     = ss_pressure_res+(self.density*self.g*h_vec)-(self.f_D*pl_vec/self.dia*self.density/2*ss_v0**2)
 
         self.set_initial_flow_velocity(ss_v0)
         self.set_initial_pressure(ss_pressure)
