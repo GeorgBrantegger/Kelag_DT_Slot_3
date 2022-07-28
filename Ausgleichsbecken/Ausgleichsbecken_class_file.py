@@ -72,10 +72,12 @@ class Ausgleichsbecken_class:
     def set_initial_level(self,initial_level):
         # sets the level in the reservoir and should only be called during initialization
         if self.level == '--':
-            self.level  = initial_level
-            self.volume = self.update_volume()
+            self.level = initial_level
         else:
             raise Exception('Initial level was already set once. Use the .update_level(self,timestep) method to update level based on net flux.')
+
+    def set_level(self,level):
+            self.level = level
 
     def set_influx(self,influx):
         # sets influx to the reservoir in m³/s
@@ -95,15 +97,14 @@ class Ausgleichsbecken_class:
 
     def set_pressure(self,pressure):
         # sets the static pressure present at the outlet of the reservoir
-            # units are used to convert and display the pressure
-        self.pressure               = pressure
+        self.pressure = pressure
 
     def set_steady_state(self,ss_influx,ss_level,display_pressure_unit):
         # set the steady state (ss) condition in which the net flux is zero
             # set pressure acting on the outflux area so that the level stays constant
         ss_outflux  = ss_influx
-        ss_influx_vel = ss_influx/self.area
-        ss_outflux_vel = ss_outflux/self.area_outflux
+        ss_influx_vel = abs(ss_influx/self.area)
+        ss_outflux_vel = abs(ss_outflux/self.area_outflux)
         ss_pressure = self.density*self.g*ss_level+self.density*ss_outflux_vel*(ss_influx_vel-ss_outflux_vel)
 
         self.set_influx(ss_influx)
@@ -115,6 +116,7 @@ class Ausgleichsbecken_class:
     def get_info(self, full = False):
         new_line = '\n'
         p = pressure_conversion(self.pressure,self.pressure_unit,self.pressure_unit_print)
+        outflux_vel = self.outflux/self.area_outflux
 
         
         if full == True:
@@ -129,7 +131,7 @@ class Ausgleichsbecken_class:
                 f"Volume in reservoir   =       {self.volume:<10} {self.volume_unit_print} {new_line}"
                 f"Current influx        =       {self.influx:<10} {self.flux_unit_print} {new_line}" 
                 f"Current outflux       =       {self.outflux:<10} {self.flux_unit_print} {new_line}"
-                f"Current outflux vel   =       {round(self.outflux_vel,3):<10} {self.velocity_unit_print} {new_line}"
+                f"Current outflux vel   =       {round(outflux_vel,3):<10} {self.velocity_unit_print} {new_line}"
                 f"Current pipe pressure =       {round(p,3):<10} {self.pressure_unit_print} {new_line}"
                 f"Simulation timestep   =       {self.timestep:<10} {self.time_unit_print} {new_line}"
                 f"Density of liquid     =       {self.density:<10} {self.density_unit_print} {new_line}"
@@ -142,7 +144,7 @@ class Ausgleichsbecken_class:
                 f"Volume in reservoir   =       {self.volume:<10} {self.volume_unit_print} {new_line}"
                 f"Current influx        =       {self.influx:<10} {self.flux_unit_print} {new_line}"
                 f"Current outflux       =       {self.outflux:<10} {self.flux_unit_print} {new_line}"
-                f"Current outflux vel   =       {round(self.outflux_vel,3):<10} {self.velocity_unit_print} {new_line}"
+                f"Current outflux vel   =       {round(outflux_vel,3):<10} {self.velocity_unit_print} {new_line}"
                 f"Current pipe pressure =       {round(p,3):<10} {self.pressure_unit_print} {new_line}"
                 f"----------------------------- {new_line}")
 
@@ -156,9 +158,6 @@ class Ausgleichsbecken_class:
     
     def get_current_outflux(self):
         return self.outflux
-    
-    def get_current_volume(self):
-        return self.volume
     
     def get_current_pressure(self):
         return self.pressure
@@ -174,19 +173,14 @@ class Ausgleichsbecken_class:
         # cannot set new level directly in this method, because it gets called to calcuate during the Runge Kutta
             # to calculate a ficticious level at half the timestep
         net_flux = self.influx-self.outflux
-        delta_V = net_flux*timestep
-        new_level = (self.volume+delta_V)/self.area
+        delta_level = net_flux*timestep/self.area
+        new_level = (self.level+delta_level)
         return new_level
 
-    def update_volume(self):
-        # sets volume in reservoir based on self.level
-        return self.level*self.area 
-
     def update_pressure(self):
-        influx_vel = self.influx/self.area
-        outflux_vel = self.outflux/self.area_outflux
+        influx_vel = abs(self.influx/self.area)
+        outflux_vel = abs(self.outflux/self.area_outflux)
         p_new = self.density*self.g*self.level+self.density*outflux_vel*(influx_vel-outflux_vel)
-        
         return p_new
 
     def timestep_reservoir_evolution(self):
@@ -209,8 +203,10 @@ class Ausgleichsbecken_class:
         ynp1    = yn + dt/6*(FODE_function(Y1,h,A,A_a,p,rho,g)+2*FODE_function(Y2,h_hs,A,A_a,p_hs,rho,g)+ \
             2*FODE_function(Y3,h_hs,A,A_a,p_hs,rho,g)+ FODE_function(Y4,h,A,A_a,p,rho,g))
 
-        self.outflux    = ynp1*A_a
-        self.level      = self.update_level(dt)
-        self.volume     = self.update_volume()
-        self.pressure   = self.update_pressure()
-        
+        new_outflux    = ynp1*A_a
+        new_level      = self.update_level(dt)
+        new_pressure   = self.update_pressure()
+
+        self.set_outflux(new_outflux)
+        self.set_level(new_level)        
+        self.set_pressure(new_pressure)

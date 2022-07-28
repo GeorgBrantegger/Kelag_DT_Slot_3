@@ -118,8 +118,8 @@ class Druckrohrleitung_class:
         ss_v0 = np.full(self.n_seg+1,ss_flux/self.A)
 
         # the static pressure is given by static state pressure of the reservoir, corrected for the hydraulic head of the pipe and friction losses
-        ss_v_in_res     = ss_flux/area_reservoir
-        ss_v_out_res    = ss_flux/self.A
+        ss_v_in_res     = abs(ss_flux/area_reservoir)
+        ss_v_out_res    = abs(ss_flux/self.A)
         ss_pressure_res = self.density*self.g*(ss_level_reservoir)+self.density*ss_v_out_res*(ss_v_in_res-ss_v_out_res)
         ss_pressure     = ss_pressure_res+(self.density*self.g*h_vec)-(self.f_D*pl_vec/self.dia*self.density/2*ss_v0**2)
 
