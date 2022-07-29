@@ -71,7 +71,10 @@ class Francis_Turbine:
     def get_current_Q(self):
         # return the flux through the turbine, based on the current pressure in front
             #  of the turbine and the Leitapparatöffnung
-        self.Q = self.Q_n*(self.LA/self.LA_n)*np.sqrt(self.p/self.p_n)
+        if self.p < 0:
+            self.Q = 0
+        else:
+            self.Q = self.Q_n*(self.LA/self.LA_n)*np.sqrt(self.p/self.p_n)
         return self.Q
 
     def get_current_LA(self):
@@ -114,7 +117,13 @@ class Francis_Turbine:
         LA_diff = self.LA-LA_soll                   # calculate the difference to the target LA
         LA_diff_max = self.d_LA_max_dt*self.dt     # calculate the maximum change in LA based on the given timestep  
         LA_diff = np.sign(LA_diff)*np.min(np.abs([LA_diff,LA_diff_max]))    # calulate the correct change in LA
-        self.set_LA(self.LA-LA_diff,display_warning=False)                # set new LA
+        
+        LA_new = self.LA-LA_diff
+        if LA_new < 0.:
+            LA_new = 0.
+        elif LA_new > 1.:
+            LA_new = 1.
+        self.set_LA(LA_new,display_warning=False)
 
     def set_steady_state(self,ss_flux,ss_pressure):
         # calculate and set steady state LA, that allows the flow of ss_flux at ss_pressure through the
