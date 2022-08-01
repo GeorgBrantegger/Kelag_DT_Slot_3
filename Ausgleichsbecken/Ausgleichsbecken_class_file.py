@@ -77,7 +77,7 @@ class Ausgleichsbecken_class:
             raise Exception('Initial level was already set once. Use the .update_level(self,timestep) method to update level based on net flux.')
 
     def set_level(self,level):
-            self.level = level
+        self.level = level
 
     def set_influx(self,influx):
         # sets influx to the reservoir in m³/s
