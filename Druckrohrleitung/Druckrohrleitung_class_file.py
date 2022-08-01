@@ -1,51 +1,42 @@
 import numpy as np
 
-#importing pressure conversion function
-import sys
-import os
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
-from functions.pressure_conversion import pressure_conversion
-
-
-
-
 class Druckrohrleitung_class:
 # units
-    acceleration_unit   = r'$\mathrm{m}/\mathrm{s}^2$'
-    angle_unit          = 'rad'
-    area_unit           = r'$\mathrm{m}^2$'
-    density_unit        = r'$\mathrm{kg}/\mathrm{m}^3$'
-    flux_unit           = r'$\mathrm{m}^3/\mathrm{s}$'
-    length_unit         = 'm'
-    time_unit           = 's'
-    velocity_unit       = r'$\mathrm{m}/\mathrm{s}$' # for flux and pressure propagation
-    volume_unit         = r'$\mathrm{m}^3$'
+    acceleration_unit           = r'$\mathrm{m}/\mathrm{s}^2$'
+    angle_unit                  = 'rad'
+    area_unit                   = r'$\mathrm{m}^2$'
+    density_unit                = r'$\mathrm{kg}/\mathrm{m}^3$'
+    flux_unit                   = r'$\mathrm{m}^3/\mathrm{s}$'
+    length_unit                 = 'm'
+    pressure_unit               = 'Pa'
+    time_unit                   = 's'
+    velocity_unit               = r'$\mathrm{m}/\mathrm{s}$' # for flux and pressure propagation
+    volume_unit                 = r'$\mathrm{m}^3$'
 
-    acceleration_unit_print   = 'm/s²'
-    angle_unit_print          = 'rad'
-    area_unit_print           = 'm²'
-    density_unit_print        = 'kg/m³'
-    flux_unit_print           = 'm³/s'
-    length_unit_print         = 'm'
-    time_unit_print           = 's'
-    velocity_unit_print       = 'm/s' # for flux and pressure propagation
-    volume_unit_print         = 'm³'
-    
+    acceleration_unit_print     = 'm/s²'
+    angle_unit_print            = 'rad'
+    area_unit_print             = 'm²'
+    density_unit_print          = 'kg/m³'
+    flux_unit_print             = 'm³/s'
+    length_unit_print           = 'm'
+    time_unit_print             = 's'
+    velocity_unit_print         = 'm/s' # for flux and pressure propagation
+    volume_unit_print           = 'm³'
 
 # init
     def __init__(self,total_length,diameter,number_segments,pipeline_angle,Darcy_friction_factor,rho=1000,g=9.81):
-        self.length     = total_length
-        self.dia        = diameter
-        self.n_seg      = number_segments
-        self.angle      = pipeline_angle
-        self.f_D        = Darcy_friction_factor     # = Rohrreibungszahl oder flow coefficient        
-        self.rho        = rho
-        self.g          = g
+        self.length     = total_length  	                            # total length of the pipeline
+        self.dia        = diameter                                      # diameter of the pipeline
+        self.n_seg      = number_segments                               # number of segments for the method of characteristics
+        self.angle      = pipeline_angle                                # angle of the pipeline
+        self.f_D        = Darcy_friction_factor                         # = Rohrreibungszahl oder flow coefficient        
+        self.density    = rho                                           # density of the liquid in the pipeline
+        self.g          = g                                             # gravitational acceleration
         
-        self.dx         = total_length/number_segments
-        self.l_vec      = np.arange(0,(number_segments+1)*self.dx,self.dx)
+        self.A          = (diameter/2)**2*np.pi
+
+        self.dx         = total_length/number_segments                  # length of each segment
+        self.l_vec      = np.arange(0,(number_segments+1),1)*self.dx    # vector giving the distance from each node to the start of the pipeline
 
         # initialize for get_info method
         self.c          = '--'
@@ -53,32 +44,32 @@ class Druckrohrleitung_class:
 
 # setter
     def set_pressure_propagation_velocity(self,c):
-        self.c      = c
-        self.dt     = self.dx/c
+        self.c      = c         # propagation velocity of the pressure wave
+        self.dt     = self.dx/c # timestep derived from c, demanded by the method of characteristics
 
     def set_number_of_timesteps(self,number_timesteps):
-        self.nt     = number_timesteps
+        self.nt     = number_timesteps  # number of timesteps 
         if self.c == '--':
             raise Exception('Please set the pressure propagation velocity before setting the number of timesteps.')
         else:
             self.t_vec = np.arange(0,self.nt*self.dt,self.dt)
 
-    def set_initial_pressure(self,pressure,pressure_unit,display_pressure_unit):
-        if np.size(pressure) == 1:
+    def set_initial_pressure(self,pressure):
+        # initialize the pressure distribution in the pipeline
+        if np.size(pressure)   == 1:
             self.p0 = np.full_like(self.l_vec,pressure)
         elif np.size(pressure) == np.size(self.l_vec):
             self.p0 = pressure
         else:
              raise Exception('Unable to assign initial pressure. Input has to be of size 1 or' + np.size(self.l_vec))
-        self.pressure_unit          = pressure_unit
-        self.pressure_unit_print    = display_pressure_unit        
         
         #initialize the vectors in which the old and new pressures are stored for the method of characteristics
-        self.p_old = self.p0.copy()
-        self.p = np.empty_like(self.p_old)
+        self.p_old  = self.p0.copy()
+        self.p      = self.p0.copy()
     
     def set_initial_flow_velocity(self,velocity):
-        if np.size(velocity) == 1:
+        # initialize the velocity distribution in the pipeline
+        if np.size(velocity)   == 1:
             self.v0 = np.full_like(self.l_vec,velocity)
         elif np.size(velocity) == np.size(self.l_vec):
             self.v0 = velocity
@@ -86,35 +77,54 @@ class Druckrohrleitung_class:
              raise Exception('Unable to assign initial velocity. Input has to be of size 1 or' + np.size(self.l_vec))    
 
         #initialize the vectors in which the old and new velocities are stored for the method of characteristics
-        self.v_old = self.v0.copy()
-        self.v = np.empty_like(self.v_old)
+        self.v_old  = self.v0.copy()
+        self.v      = self.v0.copy()
     
-    def set_boundary_conditions_next_timestep(self,v_reservoir,p_reservoir,v_turbine):
-        rho                     = self.rho
-        c                       = self.c
-        f_D                     = self.f_D
-        dt                      = self.dt
-        D                       = self.dia
-        g                       = self.g
-        alpha                   = self.angle
-        p_old                   = self.p_old[-2]    # @ second to last node (the one before the turbine)
-        v_old                   = self.v_old[-2]    # @ second to last node (the one before the turbine)
-        self.v_boundary_res     = v_reservoir       # at new timestep
-        self.v_boundary_tur     = v_turbine         # at new timestep
-        self.p_boundary_res     = p_reservoir
-        self.p_boundary_tur     = p_old-rho*c*(v_turbine-v_old)+rho*c*dt*g*np.sin(alpha)-f_D*rho*c*dt/(2*D)*abs(v_old)*v_old
-        self.v[0]               = self.v_boundary_res.copy()
-        self.v[-1]              = self.v_boundary_tur.copy()
-        self.p[0]               = self.p_boundary_res.copy()
-        self.p[-1]              = self.p_boundary_tur.copy()
+    def set_boundary_conditions_next_timestep(self,p_reservoir,v_turbine):
+        # derived from the method of characteristics, one can set the boundary conditions for the pressures and flow velocities at the reservoir and the turbine
+        # the boundary velocity at the turbine is specified by the flux through the turbine or an external boundary condition
+            # the pressure at the turbine will be calculated using the forward characteristic
+        # the boundary pressure at the reservoir is specified by the level in the reservoir of an external boundary condition
+            # the velocity at the reservoir will be calculated using the backward characteristic
 
+        # constants for a cleaner formula
+        rho                 = self.density
+        c                   = self.c
+        f_D                 = self.f_D
+        dt                  = self.dt
+        D                   = self.dia
+        g                   = self.g
+        alpha               = self.angle
+        p_old_tur           = self.p_old[-2]    # @ second to last node (the one before the turbine)
+        v_old_tur           = self.v_old[-2]    # @ second to last node (the one before the turbine)
+        p_old_res           = self.p_old[1]     # @ second  node (the one after the reservoir)
+        v_old_res           = self.v_old[1]     # @ second  node (the one after the reservoir)
+        # set the boundary conditions derived from reservoir and turbine
+        v_boundary_tur      = v_turbine         # at new timestep
+        p_boundary_res      = p_reservoir       # at new timestep
+        # calculate the missing boundary conditions
+        v_boundary_res      = v_old_res+1/(rho*c)*(p_boundary_res-p_old_res)+dt*g*np.sin(alpha)-f_D*dt/(2*D)*abs(v_old_res)*v_old_res
+        p_boundary_tur      = p_old_tur-rho*c*(v_boundary_tur-v_old_tur)+rho*c*dt*g*np.sin(alpha)-f_D*rho*c*dt/(2*D)*abs(v_old_tur)*v_old_tur
 
-    def set_steady_state(self,ss_flux,ss_level_reservoir,pl_vec,h_vec,pressure_unit,display_pressure_unit):
-        ss_v0 = np.full(self.n_seg+1,ss_flux/(self.dia**2/4*np.pi))
-        ss_pressure = (self.rho*self.g*(ss_level_reservoir+h_vec)-ss_v0**2*self.rho/2)-(self.f_D*pl_vec/self.dia*self.rho/2*ss_v0**2)
+        # write boundary conditions to the velocity/pressure vectors of the next timestep
+        self.v[0]           = v_boundary_res
+        self.v[-1]          = v_boundary_tur
+        self.p[0]           = p_boundary_res
+        self.p[-1]          = p_boundary_tur
+
+    def set_steady_state(self,ss_flux,ss_level_reservoir,area_reservoir,pl_vec,h_vec):
+        # set the pressure and velocity distributions, that allow a constant flow of water from the (steady-state) reservoir to the (steady-state) turbine
+            # the flow velocity is given by the constant flow through the pipe
+        ss_v0 = np.full(self.n_seg+1,ss_flux/self.A)
+
+        # the static pressure is given by static state pressure of the reservoir, corrected for the hydraulic head of the pipe and friction losses
+        ss_v_in_res     = abs(ss_flux/area_reservoir)
+        ss_v_out_res    = abs(ss_flux/self.A)
+        ss_pressure_res = self.density*self.g*(ss_level_reservoir)+self.density*ss_v_out_res*(ss_v_in_res-ss_v_out_res)
+        ss_pressure     = ss_pressure_res+(self.density*self.g*h_vec)-(self.f_D*pl_vec/self.dia*self.density/2*ss_v0**2)
 
         self.set_initial_flow_velocity(ss_v0)
-        self.set_initial_pressure(ss_pressure,pressure_unit,display_pressure_unit)
+        self.set_initial_pressure(ss_pressure)
 
 # getter
     def get_info(self):
@@ -142,30 +152,27 @@ class Druckrohrleitung_class:
             f"Velocity and pressure distribution are vectors and are accessible by the .v and .p attribute of the pipeline object")
 
         print(print_str)    
-        
 
-    def get_boundary_conditions_next_timestep(self):
-        print('The pressure at the reservoir for the next timestep is', '\n', \
-                pressure_conversion(self.p_boundary_res,self.pressure_unit,self.pressure_unit_print), '\n', \
-            'The velocity at the reservoir for the next timestep is', '\n', \
-                self.v_boundary_res, self.velocity_unit_print, '\n', \
-            'The pressure at the turbine for the next timestep is', '\n', \
-                pressure_conversion(self.p_boundary_tur,self.pressure_unit,self.pressure_unit_print), '\n', \
-            'The velocity at the turbine for the next timestep is', '\n', \
-                self.v_boundary_tur, self.velocity_unit_print)         
+    def get_current_pressure_distribution(self):
+        return self.p
 
+    def get_current_velocity_distribution(self):
+        return self.v
 
     def timestep_characteristic_method(self):
-        #number of nodes
-        nn      = self.n_seg+1
-        rho     = self.rho
-        c       = self.c
-        f_D     = self.f_D
-        dt      = self.dt
-        D       = self.dia
-        g       = self.g
-        alpha   = self.angle
+    # use the method of characteristics to calculate the pressure and velocities at all nodes except the boundary ones
+        # they are set with the  .set_boundary_conditions_next_timestep() method beforehand
+        
+        nn      = self.n_seg+1      # number of nodes
+        rho     = self.density      # density of liquid
+        c       = self.c            # pressure propagation velocity
+        f_D     = self.f_D          # Darcy friction coefficient
+        dt      = self.dt           # timestep
+        D       = self.dia          # pipeline diametet
+        g       = self.g            # graviational acceleration
+        alpha   = self.angle        # pipeline angle
 
+        # Vectorize this loop?
         for i in range(1,nn-1):
             self.v[i] = 0.5*(self.v_old[i+1]+self.v_old[i-1])-0.5/(rho*c)*(self.p_old[i+1]-self.p_old[i-1]) \
                 +dt*g*np.sin(alpha)-f_D*dt/(4*D)*(abs(self.v_old[i+1])*self.v_old[i+1]+abs(self.v_old[i-1])*self.v_old[i-1])
@@ -173,5 +180,8 @@ class Druckrohrleitung_class:
             self.p[i] = 0.5*(self.p_old[i+1]+self.p_old[i-1]) - 0.5*rho*c*(self.v_old[i+1]-self.v_old[i-1]) \
                 +f_D*rho*c*dt/(4*D)*(abs(self.v_old[i+1])*self.v_old[i+1]-abs(self.v_old[i-1])*self.v_old[i-1])
 
+        # prepare for next call
+            # use .copy() to write data to another memory location and avoid the usual python reference pointer
+            # else one can overwrite data by accidient and change two variables at once without noticing
         self.p_old = self.p.copy()
         self.v_old = self.v.copy()        
