@@ -84,17 +84,17 @@ class PI_controller_class:
         # use a list to be able to append more easily - will get converted to np.array when needed
         self.error_history = [0]            
 
-        self.control_variable = -99
-
         self.cv_lower_limit = lower_limit   # limits for the controll variable
         self.cv_upper_limit = upper_limit   # limits for the controll variable
 
 # setter
+
+    
     def set_setpoint(self,setpoint):
         self.SP = setpoint
 
     def set_control_variable(self,control_variable, display_warning=True):
-        if display_warning == True and self.control_variable != -99:
+        if display_warning == True:
             print('WARNING! You are setting the control variable of the PI controller manually \
                 and are not using the .update_controll_variable() method')
         self.control_variable = control_variable

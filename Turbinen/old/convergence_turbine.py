@@ -1,4 +1,3 @@
-from time import time
 import numpy as np
 #importing pressure conversion function
 import sys
@@ -59,7 +58,7 @@ class Francis_Turbine_test:
 
     def set_timestep(self,timestep,display_warning=True):
         # set Leitapparatöffnung
-        self.dt = time
+        self.dt = timestep
         # warn user, that the .set_LA() method should not be used ot set LA manually
         if display_warning == True:
             print('WARNING: You are changing the timestep of the turbine simulation. This has implications on the simulated closing speed!')
