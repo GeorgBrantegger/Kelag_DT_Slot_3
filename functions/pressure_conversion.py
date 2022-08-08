@@ -27,8 +27,6 @@ def pa_to_torr(p):
 def pa_to_atm(p):
     return p*1/(101.325*1e3)
 
- # converstion function
-
 def pa_to_psi(p):
     return p/6894.8
 
