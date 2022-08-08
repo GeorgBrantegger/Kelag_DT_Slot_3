@@ -1,6 +1,7 @@
 import numpy as np
 #based on https://en.wikipedia.org/wiki/PID_controller#Discrete_implementation
 
+# performance parameters for controllers
 def trap_int(vec,timestep):
     # numerical integration via the trapeziod rule to calculate the performance parameters
     l = np.size(vec)
@@ -41,6 +42,7 @@ def ITAE_fun(error_history,timestep):
     itae = trap_int(np.abs(e),dt)
     return itae    
 
+# P controller
 class P_controller_class:
     # def __init__(self,setpoint,proportionality_constant):
     #     self.SP = setpoint
@@ -72,14 +74,14 @@ class P_controller_class:
     def __init__(self):
         pass
 
-
+# PI controller
 class PI_controller_class:
 # init
     def __init__(self,setpoint,deadband,proportionality_constant,Ti,timestep,lower_limit=0.,upper_limit=1.):
         self.SP = setpoint
         self.db = deadband
         self.Kp = proportionality_constant
-        self.Ti = Ti                        # integration time
+        self.Ti = Ti                        # ~integration time
         self.dt = timestep
         # use a list to be able to append more easily - will get converted to np.array when needed
         self.error_history = [0]            
@@ -88,15 +90,13 @@ class PI_controller_class:
         self.cv_upper_limit = upper_limit   # limits for the controll variable
 
 # setter
-
-    
     def set_setpoint(self,setpoint):
         self.SP = setpoint
 
     def set_control_variable(self,control_variable, display_warning=True):
         if display_warning == True:
-            print('WARNING! You are setting the control variable of the PI controller manually \
-                and are not using the .update_controll_variable() method')
+            print('WARNING! You are setting the control variable of the PI controller manually! \
+                Consider using the .update_controll_variable() method instead.')
         self.control_variable = control_variable
 
 # getter
@@ -167,14 +167,13 @@ class PI_controller_class:
             # only if that is the case, change control variable
         if abs(self.error) > self.db:
             new_control = cv+Kp*(e0-e1)+dt/Ti*e0
+            # ensure that the controll variable stays within the predefined limits
+            if new_control < self.cv_lower_limit:
+                new_control = self.cv_lower_limit
+            if new_control > self.cv_upper_limit:
+                new_control = self.cv_upper_limit
         else:
             new_control = cv
-
-        # ensure that the controll variable stays within the predefined limits
-        if new_control < self.cv_lower_limit:
-            new_control = self.cv_lower_limit
-        if new_control > self.cv_upper_limit:
-            new_control = self.cv_upper_limit
 
         # set the control variable attribute
         self.set_control_variable(new_control,display_warning=False)

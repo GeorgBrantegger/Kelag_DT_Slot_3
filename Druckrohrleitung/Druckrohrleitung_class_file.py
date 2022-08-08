@@ -9,14 +9,16 @@ sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
 
 class Druckrohrleitung_class:
-# units
+# units 
+    # make sure that units and display units are the same
+    # units are used to label graphs and disp units are used to have a bearable format when using pythons print()
     acceleration_unit           = r'$\mathrm{m}/\mathrm{s}^2$'
     angle_unit                  = 'rad'
     area_unit                   = r'$\mathrm{m}^2$'
     density_unit                = r'$\mathrm{kg}/\mathrm{m}^3$'
     flux_unit                   = r'$\mathrm{m}^3/\mathrm{s}$'
     length_unit                 = 'm'
-    pressure_unit               = 'Pa'
+    pressure_unit               = 'Pa'  # DONT CHANGE needed for pressure conversion
     time_unit                   = 's'
     velocity_unit               = r'$\mathrm{m}/\mathrm{s}$' # for flux and pressure propagation
     volume_unit                 = r'$\mathrm{m}^3$'
@@ -27,33 +29,54 @@ class Druckrohrleitung_class:
     density_unit_disp           = 'kg/m³'
     flux_unit_disp              = 'm³/s'
     length_unit_disp            = 'm'
+    # pressure_unit_disp will be set within the __init__() method
     time_unit_disp              = 's'
     velocity_unit_disp          = 'm/s' # for flux and pressure propagation
     volume_unit_disp            = 'm³'
 
-    g = 9.81
+    g = 9.81    # m/s²  gravitational acceleration
 
 # init
-    def __init__(self,total_length,diameter,number_segments,pipeline_angle,Darcy_friction_factor,pw_vel,timestep,pressure_unit_disp,rho=1000):
-        self.length     = total_length  	                            # total length of the pipeline
-        self.dia        = diameter                                      # diameter of the pipeline
-        self.n_seg      = number_segments                               # number of segments for the method of characteristics
-        self.angle      = pipeline_angle                                # angle of the pipeline
-        self.f_D        = Darcy_friction_factor                         # = Rohrreibungszahl oder flow coefficient  
-        self.c          = pw_vel
+    def __init__(self,total_length,diameter,pipeline_head,number_segments,Darcy_friction_factor,pw_vel,timestep,pressure_unit_disp,rho=1000):
+        """
+        Creates a reservoir with given attributes in this order: \n
+            Pipeline length                 [m]         \n
+            Pipeline diameter               [m]         \n
+            Pipeline head                   [m]         \n
+            Number of pipeline segments     [1]         \n
+            Darcy friction factor           [1]         \n
+            Pressure wave velocity          [m/s]       \n
+            Simulation timestep             [s]         \n
+            Pressure unit for displaying    [string]    \n            
+            Density of the liquid           [kg/m³]     \n
+        """
+        self.length     = total_length  	                                        # total length of the pipeline
+        self.dia        = diameter                                                  # diameter of the pipeline
+        self.head       = pipeline_head                                             # hydraulic head of the pipeline
+        self.n_seg      = number_segments                                           # number of segments for the method of characteristics
+        self.f_D        = Darcy_friction_factor                                     # = Rohrreibungszahl oder flow coefficient  
+        self.c          = pw_vel                                                    # propagation velocity of pressure wave
         self.dt         = timestep
-        self.density    = rho                                           # density of the liquid in the pipeline
+        self.density    = rho                                                       # density of the liquid in the pipeline
         
-        self.A          = (diameter/2)**2*np.pi
+        # derivatives of input attributes
+        self.angle      = np.arcsin(self.head/self.length)                          # angle of the pipeline
+        self.A          = (diameter/2)**2*np.pi                                     # crossectional area of the pipeline
+        self.dx         = total_length/number_segments                              # length of each segment
+        self.x_vec      = np.arange(0,(number_segments+1),1)*self.dx                # vector giving the distance from each node to the start of the pipeline
+        self.h_vec      = np.arange(0,(number_segments+1),1)*self.head/self.n_seg   # vector giving the height difference from each node to the start of the pipeline
+        
+        self.pressure_unit_disp = pressure_unit_disp                                # pressure unit for displaying
 
-        self.dx         = total_length/number_segments                  # length of each segment
-        self.x_vec      = np.arange(0,(number_segments+1),1)*self.dx    # vector giving the distance from each node to the start of the pipeline
-
-        self.pressure_unit_disp = pressure_unit_disp
-
-# setter
-    def set_initial_pressure(self,pressure):
+# setter - set attributes
+    def set_initial_pressure(self,pressure,display_warning=True):
         # initialize the pressure distribution in the pipeline
+        if display_warning == True:
+            print('You are setting the pressure distribution in the pipeline manually. \n \
+                This is not an intended use of this method. \n \
+                Refer to the set_steady_state() method instead.')
+
+        # make sure the vector has the right size
         if np.size(pressure)   == 1:
             p0 = np.full_like(self.x_vec,pressure)
         elif np.size(pressure) == np.size(self.x_vec):
@@ -64,11 +87,18 @@ class Druckrohrleitung_class:
         #initialize the vectors in which the old and new pressures are stored for the method of characteristics
         self.p_old  = p0.copy()
         self.p      = p0.copy()
+        # initialize the vectors in which the minimal and maximal value of the pressure at each node are stores
         self.p_min  = p0.copy()
         self.p_max  = p0.copy()
     
-    def set_initial_flow_velocity(self,velocity):
+    def set_initial_flow_velocity(self,velocity, display_warning=True):
         # initialize the velocity distribution in the pipeline
+        if display_warning == True:
+            print('You are setting the velocity distribution in the pipeline manually. \n \
+                This is not an intended use of this method. \n \
+                Refer to the set_steady_state() method instead.')   
+
+        # make sure the vector has the right size  
         if np.size(velocity)   == 1:
             v0 = np.full_like(self.x_vec,velocity)
         elif np.size(velocity) == np.size(self.x_vec):
@@ -79,6 +109,7 @@ class Druckrohrleitung_class:
         #initialize the vectors in which the old and new velocities are stored for the method of characteristics
         self.v_old  = v0.copy()
         self.v      = v0.copy()
+        # initialize the vectors in which the minimal and maximal value of the velocity at each node are stores
         self.v_min  = v0.copy()
         self.v_max  = v0.copy()
     
@@ -114,21 +145,19 @@ class Druckrohrleitung_class:
         self.p[0]           = p_boundary_res
         self.p[-1]          = p_boundary_tur
 
-    def set_steady_state(self,ss_flux,ss_level_reservoir,area_reservoir,x_vec,h_vec):
+    def set_steady_state(self,ss_flux,ss_pressure_res):
         # set the pressure and velocity distributions, that allow a constant flow of water from the (steady-state) reservoir to the (steady-state) turbine
             # the flow velocity is given by the constant flow through the pipe
         ss_v0 = np.full_like(self.x_vec,ss_flux/self.A)
 
         # the static pressure is given by static state pressure of the reservoir, corrected for the hydraulic head of the pipe and friction losses
-        ss_v_in_res     = abs(ss_flux/area_reservoir)
-        ss_v_out_res    = abs(ss_flux/self.A)
-        ss_pressure_res = self.density*self.g*(ss_level_reservoir)+self.density*ss_v_out_res*(ss_v_in_res-ss_v_out_res)
-        ss_pressure     = ss_pressure_res+(self.density*self.g*h_vec)-(self.f_D*x_vec/self.dia*self.density/2*ss_v0**2)
+        ss_pressure     = ss_pressure_res+(self.density*self.g*self.h_vec)-(self.f_D*self.x_vec/self.dia*self.density/2*ss_v0**2)
 
-        self.set_initial_flow_velocity(ss_v0)
-        self.set_initial_pressure(ss_pressure)
+        # set the initial conditions
+        self.set_initial_flow_velocity(ss_v0,display_warning=False)
+        self.set_initial_pressure(ss_pressure,display_warning=False)
 
-# getter
+# getter - return attributes
     def get_info(self):
         new_line    = '\n'
         angle_deg   = round(self.angle/np.pi*180,3)
@@ -139,6 +168,7 @@ class Druckrohrleitung_class:
             f"----------------------------- {new_line}"
             f"Length                =       {self.length:<10} {self.length_unit_disp} {new_line}"
             f"Diameter              =       {self.dia:<10} {self.length_unit_disp} {new_line}"
+            f"Hydraulic head        =       {self.head:<10} {self.length_unit_disp} {new_line}"
             f"Number of segments    =       {self.n_seg:<10} {new_line}"
             f"Number of nodes       =       {self.n_seg+1:<10} {new_line}"
             f"Length per segments   =       {self.dx:<10} {self.length_unit_disp} {new_line}"
@@ -148,17 +178,16 @@ class Druckrohrleitung_class:
             f"Density of liquid     =       {self.density:<10} {self.density_unit_disp} {new_line}"
             f"Pressure wave vel.    =       {self.c:<10} {self.velocity_unit_disp} {new_line}"
             f"Simulation timestep   =       {self.dt:<10} {self.time_unit_disp} {new_line}"
-            f"Number of timesteps   =       {self.nt:<10} {new_line}"
-            f"Total simulation time =       {self.nt*self.dt:<10} {self.time_unit_disp} {new_line}"
             f"----------------------------- {new_line}"
             f"Velocity and pressure distribution are vectors and are accessible by the .v and .p attribute of the pipeline object")
 
         print(print_str)    
 
-    def get_current_pressure_distribution(self,disp=False):
-        if disp == True:
+    def get_current_pressure_distribution(self,disp_flag=False):
+        # disp_flag if one wants to directly plot the return of this method
+        if disp_flag == True:       # convert to pressure unit disp
             return pressure_conversion(self.p,self.pressure_unit,self.pressure_unit_disp)
-        elif disp == False:
+        elif disp_flag == False:    # stay in Pa
             return self.p
 
     def get_current_velocity_distribution(self):
@@ -167,16 +196,16 @@ class Druckrohrleitung_class:
     def get_current_flux_distribution(self):
         return self.v*self.A
 
-    def get_lowest_pressure_per_node(self,disp=False):
-        if disp == True:
+    def get_lowest_pressure_per_node(self,disp_flag=False):
+        if disp_flag == True:       # convert to pressure unit disp
             return pressure_conversion(self.p_min,self.pressure_unit,self.pressure_unit_disp)
-        elif disp == False:
+        elif disp_flag == False:    # stay in Pa
             return self.p_min
 
-    def get_highest_pressure_per_node(self,disp=False):
-        if disp == True:
+    def get_highest_pressure_per_node(self,disp_flag=False):
+        if disp_flag == True:       # convert to pressure unit disp
             return pressure_conversion(self.p_max,self.pressure_unit,self.pressure_unit_disp)
-        elif disp == False:
+        elif disp_flag == False:    # stay in Pa
             return self.p_max
 
     def get_lowest_velocity_per_node(self):
@@ -194,14 +223,15 @@ class Druckrohrleitung_class:
 
     def timestep_characteristic_method(self):
     # use the method of characteristics to calculate the pressure and velocities at all nodes except the boundary ones
-        # they are set with the  .set_boundary_conditions_next_timestep() method beforehand
+        # they are set with the .set_boundary_conditions_next_timestep() method beforehand
         
+        # constants for cleaner formula
         nn      = self.n_seg+1      # number of nodes
         rho     = self.density      # density of liquid
         c       = self.c            # pressure propagation velocity
         f_D     = self.f_D          # Darcy friction coefficient
         dt      = self.dt           # timestep
-        D       = self.dia          # pipeline diametet
+        D       = self.dia          # pipeline diameter
         g       = self.g            # graviational acceleration
         alpha   = self.angle        # pipeline angle
 
