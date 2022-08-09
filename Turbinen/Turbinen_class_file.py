@@ -78,6 +78,8 @@ class Francis_Turbine:
         if ss_LA < 0 or ss_LA > 1:
             raise Exception('LA out of range [0;1]')
         self.set_LA(ss_LA,display_warning=False)
+        self.set_pressure(ss_pressure)
+        self.get_current_Q()
 
 #getter - get attributes
     def get_current_Q(self):
@@ -113,21 +115,25 @@ class Francis_Turbine:
                 f"Nominal pressure      =       {round(p_n,3):<10} {self.pressure_unit_disp}{new_line}"
                 f"Nominal LA            =       {self.LA_n*100:<10} {self.LA_unit_disp} {new_line}"
                 f"Closing time          =       {self.t_c:<10} {self.time_unit_disp} {new_line}"
-                f"Current flux          =       {self.Q:<10} {self.flux_unit_disp} {new_line}" 
+                f"Current flux          =       {round(self.Q,3):<10} {self.flux_unit_disp} {new_line}" 
                 f"Current pipe pressure =       {round(p,3):<10} {self.pressure_unit_disp} {new_line}"
-                f"Current LA            =       {self.LA*100:<10} {self.LA_unit_disp} {new_line}"
+                f"Current LA            =       {round(self.LA,4)*100:<10} {self.LA_unit_disp} {new_line}"
                 f"Simulation timestep   =       {self.dt:<10} {self.time_unit_disp} {new_line}"
                 f"----------------------------- {new_line}")
         else:
             # :<10 pads the self.value to be 10 characters wide
             print_str = (f"The current attributes are: {new_line}" 
                 f"----------------------------- {new_line}"
-                f"Current flux          =       {self.Q:<10} {self.flux_unit_disp} {new_line}" 
+                f"Current flux          =       {round(self.Q,3):<10} {self.flux_unit_disp} {new_line}" 
                 f"Current pipe pressure =       {round(p,3):<10} {self.pressure_unit_disp} {new_line}"
-                f"Current LA            =       {self.LA*100:<10} {self.LA_unit_disp} {new_line}"
+                f"Current LA            =       {round(self.LA,4)*100:<10} {self.LA_unit_disp} {new_line}"
                 f"----------------------------- {new_line}")
 
         print(print_str)
+
+    def get_Q_n(self):
+        # needed for Kraftwerk_class
+        return self.Q_n
 
 # update methods
     def update_LA(self,LA_soll):
@@ -182,4 +188,4 @@ class Francis_Turbine:
                 print('did not converge')
                 break
         # print(i)
-        self.Q = Q_new
+        # self.get_current_Q()
