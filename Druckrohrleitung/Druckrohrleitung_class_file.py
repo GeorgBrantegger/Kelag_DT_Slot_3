@@ -240,8 +240,40 @@ class Druckrohrleitung_class:
             self.v[i] = 0.5*(self.v_old[i+1]+self.v_old[i-1])-0.5/(rho*c)*(self.p_old[i+1]-self.p_old[i-1]) \
                 +dt*g*np.sin(alpha)-f_D*dt/(4*D)*(abs(self.v_old[i+1])*self.v_old[i+1]+abs(self.v_old[i-1])*self.v_old[i-1])
 
-            self.p[i] = 0.5*(self.p_old[i+1]+self.p_old[i-1]) - 0.5*rho*c*(self.v_old[i+1]-self.v_old[i-1]) \
+            self.p[i] = 0.5*(self.p_old[i+1]+self.p_old[i-1])-0.5*rho*c*(self.v_old[i+1]-self.v_old[i-1]) \
                 +f_D*rho*c*dt/(4*D)*(abs(self.v_old[i+1])*self.v_old[i+1]-abs(self.v_old[i-1])*self.v_old[i-1])
+
+        # update overall min and max values for pressure and velocity per node
+        self.p_min = np.minimum(self.p_min,self.p)
+        self.p_max = np.maximum(self.p_max,self.p)
+        self.v_min = np.minimum(self.v_min,self.v)
+        self.v_max = np.maximum(self.v_max,self.v)
+
+        # prepare for next call
+            # use .copy() to write data to another memory location and avoid the usual python reference pointer
+            # else one can overwrite data by accidient and change two variables at once without noticing
+        self.p_old = self.p.copy()
+        self.v_old = self.v.copy()        
+
+    def timestep_characteristic_method_vectorized(self):
+    # use the method of characteristics to calculate the pressure and velocities at all nodes except the boundary ones
+        # they are set with the .set_boundary_conditions_next_timestep() method beforehand
+        
+        # constants for cleaner formula
+        rho     = self.density      # density of liquid
+        c       = self.c            # pressure propagation velocity
+        f_D     = self.f_D          # Darcy friction coefficient
+        dt      = self.dt           # timestep
+        D       = self.dia          # pipeline diameter
+        g       = self.g            # graviational acceleration
+        alpha   = self.angle        # pipeline angle
+
+        # Vectorized loop
+        self.v[1:-1] = 0.5*(self.v_old[2:]+self.v_old[:-2])-0.5/(rho*c)*(self.p_old[2:]-self.p_old[:-2]) \
+            +dt*g*np.sin(alpha)-f_D*dt/(4*D)*(np.abs(self.v_old[2:])*self.v_old[2:]+np.abs(self.v_old[:-2])*self.v_old[:-2])
+
+        self.p[1:-1] = 0.5*(self.p_old[2:]+self.p_old[:-2])-0.5*rho*c*(self.v_old[2:]-self.v_old[:-2]) \
+            +f_D*rho*c*dt/(4*D)*(np.abs(self.v_old[2:])*self.v_old[2:]-np.abs(self.v_old[:-2])*self.v_old[:-2])
 
         # update overall min and max values for pressure and velocity per node
         self.p_min = np.minimum(self.p_min,self.p)
