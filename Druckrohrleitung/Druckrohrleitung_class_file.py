@@ -87,6 +87,7 @@ class Druckrohrleitung_class:
         #initialize the vectors in which the old and new pressures are stored for the method of characteristics
         self.p_old  = p0.copy()
         self.p      = p0.copy()
+        self.p0     = p0.copy()
         # initialize the vectors in which the minimal and maximal value of the pressure at each node are stores
         self.p_min  = p0.copy()
         self.p_max  = p0.copy()
@@ -220,6 +221,12 @@ class Druckrohrleitung_class:
     def get_highest_flux_per_node(self):
         return self.v_max*self.A
 
+    def get_initial_pressure_distribution(self,disp_flag=False):
+        # disp_flag if one wants to directly plot the return of this method
+        if disp_flag == True:       # convert to pressure unit disp
+            return pressure_conversion(self.p0,self.pressure_unit,self.pressure_unit_disp)
+        elif disp_flag == False:    # stay in Pa
+            return self.p0    
 
     def timestep_characteristic_method(self):
     # use the method of characteristics to calculate the pressure and velocities at all nodes except the boundary ones
