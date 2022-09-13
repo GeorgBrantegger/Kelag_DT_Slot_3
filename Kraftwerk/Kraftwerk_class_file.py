@@ -24,10 +24,14 @@ class Kraftwerk_class:
         for i in range(self.n_turbines):
             self.turbines[i].set_pressure(pressure)
         
-    def set_steady_state(self,ss_flux,ss_pressure):
+    def set_steady_state_by_flux(self,ss_flux,ss_pressure):
         self.identify_Q_proportion()
         for i in range(self.n_turbines):
-            self.turbines[i].set_steady_state(ss_flux*self.Q_prop[i],ss_pressure)
+            self.turbines[i].set_steady_state_by_flux(ss_flux*self.Q_prop[i],ss_pressure)
+
+    def set_steady_state_by_LA(self,LA_vec,ss_pressure):
+        for i in range(self.n_turbines):
+            self.turbines[i].set_steady_state_by_LA(LA_vec[i],ss_pressure)
 
 # getter
     def get_current_Q(self):

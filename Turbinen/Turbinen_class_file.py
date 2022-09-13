@@ -71,10 +71,18 @@ class Francis_Turbine:
         # set pressure in front of the turbine
         self.p = pressure
 
-    def set_steady_state(self,ss_flux,ss_pressure):
+    def set_steady_state_by_flux(self,ss_flux,ss_pressure):
         # calculate and set steady state LA, that allows the flow of ss_flux at ss_pressure through the
             # turbine at the steady state LA
         ss_LA = self.LA_n*ss_flux/self.Q_n*np.sqrt(self.p_n/ss_pressure)
+        if ss_LA < 0 or ss_LA > 1:
+            raise Exception('LA out of range [0;1]')
+        self.set_LA(ss_LA,display_warning=False)
+        self.set_pressure(ss_pressure)
+        self.get_current_Q()
+
+    def set_steady_state_by_LA(self,ss_LA,ss_pressure):
+        # set the turbine to a steady state defined by the pressure and the guide vane opening (LeitApparatöffnung)
         if ss_LA < 0 or ss_LA > 1:
             raise Exception('LA out of range [0;1]')
         self.set_LA(ss_LA,display_warning=False)
@@ -193,4 +201,3 @@ class Francis_Turbine:
             if i == 1e6:
                 print('did not converge')
                 break
-        # print(i)
