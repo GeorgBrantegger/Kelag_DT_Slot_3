@@ -31,7 +31,7 @@ class Kraftwerk_class:
 
 # getter
     def get_current_Q(self):
-        Q = 0
+        Q = 0.
         for i in range(self.n_turbines):
             Q += self.turbines[i].get_current_Q()
         return Q
@@ -88,20 +88,26 @@ class Kraftwerk_class:
         c                   = convergence_parameters[6]                     # pressure wave propagtation velocity
         rho                 = convergence_parameters[7]                     # density of the liquid
         dt                  = convergence_parameters[8]                     # timestep of the characteristic method
-        
+        p_old               = convergence_parameters[9]                     # pressure of previous timestep
         Q_old               = self.get_current_Q()                          
         v_old               = Q_old/area_pipe                               
 
 
         while iteration_change > eps:
+            
             p_new = p-rho*c*(v_old-v)+rho*c*dt*g*np.sin(alpha)-f_D*rho*c*dt/(2*D)*abs(v)*v
+            # print(p_new)
+            p_new = p_old+(p_new-p_old)/3
+            # print(p_new)
             self.set_pressure(p_new)
             Q_new = self.get_current_Q()
             v_new = Q_new/area_pipe
+            # print(Q_old,Q_new)
 
             iteration_change = abs(Q_old-Q_new)
             Q_old = Q_new.copy()
             v_old = v_new.copy()
+            p_old = p_new.copy()
             i = i+1
             if i == 1e6:
                 print('did not converge')
