@@ -4,4 +4,5 @@
 *.pyc
 Messing Around/
 Messing Around/messy_nb.ipynb
-Validation Data/
+Validation Data/*.txt
+Validation Data/*.jpg
