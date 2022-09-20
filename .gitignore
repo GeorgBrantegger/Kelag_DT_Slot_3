@@ -4,5 +4,4 @@
 *.pyc
 Messing Around/
 Messing Around/messy_nb.ipynb
-Validation Data/*.txt
-Validation Data/*.jpg
+Validation Data/raw data Tieferbach/*.txt

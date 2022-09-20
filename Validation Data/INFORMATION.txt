@@ -1,6 +1,0 @@
-Zeitraum UNIX >= 01.06.2022 00:00 Uhr CEST und < 01.09.2022 00:00 Uhr CEST
-Daten aus spontanen Archiven aus Datenbank KW_UT (Archive 10,40,50)
-Spaltenseparator ;
-Dezimaltrennzeichen . 
-Spalten: Siehe .txt Files
-Daten enthalten nur gültige Werte, d.h. Invalid-Bit (18. Bit) im Status ist FALSE
