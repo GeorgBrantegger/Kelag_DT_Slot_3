@@ -1,13 +1,15 @@
+import os
+import sys
 from logging import exception
+
 import numpy as np
 
 #importing pressure conversion function
-import sys
-import os
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
+
 
 def FODE_function(x_out,h,A,A_a,p,rho,g):
     # (FODE     ... first order differential equation)

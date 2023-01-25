@@ -1,14 +1,15 @@
+import os
+import sys
+
 import numpy as np
+from pyparsing import alphanums
 
 #importing pressure conversion function
-import sys
-import os
-
-from pyparsing import alphanums
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
+
 
 class Francis_Turbine:
 # units 

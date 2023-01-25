@@ -1,12 +1,14 @@
+import os
+import sys
+
 import numpy as np
 
 #importing pressure conversion function
-import sys
-import os
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
+
 
 class Druckrohrleitung_class:
 # units 
