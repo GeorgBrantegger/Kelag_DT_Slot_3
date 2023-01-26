@@ -214,6 +214,8 @@ class Ausgleichsbecken_class:
         net_flux = self.influx-self.outflux
         delta_level = net_flux*timestep/self.area
         level_new = (self.level+delta_level)
+        if level_new < 0.1:
+            raise Exception('Ausgleichsbecken leer')
         # set flag is necessary because update_level() is used to get a halfstep value in the time evoultion
         if set_flag == True:
             self.set_level(level_new,display_warning=False)
