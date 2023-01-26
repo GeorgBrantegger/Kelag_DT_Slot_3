@@ -231,8 +231,8 @@ class Druckrohrleitung_class:
             return self.p0    
 
     def timestep_characteristic_method(self):
-    # use the method of characteristics to calculate the pressure and velocities at all nodes except the boundary ones
-        # they are set with the .set_boundary_conditions_next_timestep() method beforehand
+        # use the method of characteristics to calculate the pressure and velocities at all nodes except the boundary ones
+            # they are set with the .set_boundary_conditions_next_timestep() method beforehand
         
         # constants for cleaner formula
         nn      = self.n_seg+1      # number of nodes
@@ -265,8 +265,8 @@ class Druckrohrleitung_class:
         self.v_old = self.v.copy()        
 
     def timestep_characteristic_method_vectorized(self):
-    # use the method of characteristics to calculate the pressure and velocities at all nodes except the boundary ones
-        # they are set with the .set_boundary_conditions_next_timestep() method beforehand
+        # use the method of characteristics to calculate the pressure and velocities at all nodes except the boundary ones
+            # they are set with the .set_boundary_conditions_next_timestep() method beforehand
         
         # constants for cleaner formula
         rho     = self.density      # density of liquid
