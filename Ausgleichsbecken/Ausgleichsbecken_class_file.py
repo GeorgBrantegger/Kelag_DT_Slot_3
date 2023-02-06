@@ -1,6 +1,8 @@
-import os
-import sys
-from logging import exception
+# import modules for general use
+import os  # to import functions from other folders
+import sys  # to import functions from other folders
+from logging import \
+    exception  # to throw an exception when a specific condition is met
 
 import numpy as np
 
@@ -13,10 +15,12 @@ from functions.pressure_conversion import pressure_conversion
 
 def FODE_function(x_out,h,A,A_a,p,rho,g):
     # (FODE     ... first order differential equation)
+    # describes the change in outflux velocity from a reservoir
     # based on the outflux formula by Andreas Malcherek
         # https://www.youtube.com/watch?v=8HO2LwqOhqQ
         # adapted for a pressurized pipeline into which the reservoir effuses
-        #   and flow direction
+        # and flow direction
+        # see documentation in word-file
     # x_out     ... effusion velocity
     # h         ... level in the reservoir
     # A_a       ... Area_outflux
@@ -29,14 +33,14 @@ def FODE_function(x_out,h,A,A_a,p,rho,g):
 
 class Ausgleichsbecken_class:
 # units 
-    # make sure that units and display units are the same
-    # units are used to label graphs and disp units are used to have a bearable format when using pythons print()
+    # make sure that units and display units are the same!
+    # units are used to label graphs and disp units are used to have good formatting when using pythons print()
     area_unit               = r'$\mathrm{m}^2$'
     area_outflux_unit       = r'$\mathrm{m}^2$'
     density_unit            = r'$\mathrm{kg}/\mathrm{m}^3$'
     flux_unit               = r'$\mathrm{m}^3/\mathrm{s}$'
     level_unit              = 'm'
-    pressure_unit           = 'Pa' # DONT CHANGE needed for pressure conversion
+    pressure_unit           = 'Pa' # !DO NOT CHANGE! needed for pressure conversion
     time_unit               = 's'
     velocity_unit           = r'$\mathrm{m}/\mathrm{s}$'
     volume_unit             = r'$\mathrm{m}^3$'
@@ -55,6 +59,7 @@ class Ausgleichsbecken_class:
 
 
 # init
+    # see docstring below
     def __init__(self,area,area_outflux,timestep,pressure_unit_disp,level_min=0,level_max=np.inf,rho = 1000.):
         """
         Creates a reservoir with given attributes in this order: \n
@@ -62,8 +67,8 @@ class Ausgleichsbecken_class:
             Outflux Area                    [m²]        \n
             Simulation timestep             [s]         \n
             Pressure unit for displaying    [string]    \n
-            Minimal level                   [m]         \n
-            Maximal level                   [m]         \n
+            Minimum level                   [m]         \n
+            Maximum level                   [m]         \n
             Density of the liquid           [kg/m³]     \n
         """
         #set initial attributes
@@ -75,7 +80,8 @@ class Ausgleichsbecken_class:
         self.pressure_unit_disp     = pressure_unit_disp    # pressure unit for displaying
         self.timestep               = timestep              # timestep in the time evolution method
 
-        # initialize for get_info() (if get_info() gets called before set_steady_state() is executed)
+        # initialize for get_info() (if get_info() gets called before set_steady_state() was ever executed)
+            # is also used to check if set_steady_state() was ever executed
         self.influx     = -np.inf
         self.outflux    = -np.inf
         self.level      = -np.inf
@@ -97,7 +103,7 @@ class Ausgleichsbecken_class:
         if self.pressure == -np.inf:
             self.pressure = initial_pressure
         else:
-            raise Exception('Initial pressure was already set once. Use the .update_pressure(self) method to update pressure based current level.')
+            raise Exception('Initial pressure was already set once. Use the .update_pressure(self) method to update pressure based on current level.')
 
     def set_influx(self,influx):
         # sets influx to the reservoir in m³/s
@@ -143,7 +149,7 @@ class Ausgleichsbecken_class:
         ss_outflux      = ss_influx
         ss_influx_vel   = abs(ss_influx/self.area)
         ss_outflux_vel  = abs(ss_outflux/self.area_out)
-        # see confluence doc for explaination on how to arrive at the ss pressure formula
+        # see word document for explaination on how to arrive at the ss pressure formula
         ss_pressure = self.density*self.g*ss_level+self.density*ss_outflux_vel*(ss_influx_vel-ss_outflux_vel)
 
         # use setter methods to set the attributes to their steady state values
@@ -155,6 +161,7 @@ class Ausgleichsbecken_class:
 # getter - return attributes
     def get_info(self, full = False):
         # prints out the info on the current state of the reservoir
+        # full = True gives more info
         new_line = '\n'
         if self.pressure != np.inf:
             p = pressure_conversion(self.pressure,self.pressure_unit,self.pressure_unit_disp)
@@ -189,7 +196,8 @@ class Ausgleichsbecken_class:
                 f"Current outflux vel   =       {round(outflux_vel,3):<10} {self.velocity_unit_disp} {new_line}"
                 f"Current pipe pressure =       {round(p,3):<10} {self.pressure_unit_disp} {new_line}"
                 f"----------------------------- {new_line}")
-
+        
+        # print the info to console
         print(print_str)
     
     def get_current_influx(self):
@@ -210,12 +218,15 @@ class Ausgleichsbecken_class:
 # update methods - update attributes based on some parameter     
     def update_level(self,timestep,set_flag=False):
         # update level based on net flux and timestep by calculating the volume change in
-            # the timestep and the converting the new volume to a level by assuming a cuboid reservoir
+        #   the timestep and then convert the new volume to a level by assuming a cuboid reservoir
+        # there is no call of the update_volume() function because I need the updated level from half a timestep in the reservoir evolution
+        #   if update_volume() was called within this function, the script would produce wrong results.
         net_flux = self.influx-self.outflux
         delta_level = net_flux*timestep/self.area
         level_new = (self.level+delta_level)
-        if level_new < 0.1:
-            raise Exception('Ausgleichsbecken leer')
+        # raise exception error if level in reservoir falls below 0.01 ######################### has to be commented out if used in loop
+        if level_new < 0.01:
+            raise Exception('Reservoir ran emtpy')
         # set flag is necessary because update_level() is used to get a halfstep value in the time evoultion
         if set_flag == True:
             self.set_level(level_new,display_warning=False)
@@ -224,7 +235,7 @@ class Ausgleichsbecken_class:
 
     def update_pressure(self,set_flag=False):
         # update pressure based on level and flux velocities 
-        # see confluence doc for explaination
+        # see word document for explaination
         influx_vel  = abs(self.influx/self.area)
         outflux_vel = abs(self.outflux/self.area_out)
         p_new = self.density*self.g*self.level+self.density*outflux_vel*(influx_vel-outflux_vel)
@@ -245,6 +256,7 @@ class Ausgleichsbecken_class:
 #methods 
     def timestep_reservoir_evolution(self):
         # update outflux, level, pressure and volume based on current pipeline pressure and waterlevel in reservoir
+        # solve the FODE of the outflux velocity for one timestep using explicit four step Runge-Kutta method
         
         # get some variables
         dt      = self.timestep

@@ -163,7 +163,7 @@ class Francis_Turbine:
     def converge(self,convergence_parameters):
         # small numerical disturbances (~1e-12 m/s) in the velocity can get amplified at the turbine node, because the new velocity of the turbine and the
         # new pressure from the forward characteristic are not perfectly compatible.
-        # Therefore, iterate the flux and the pressure so long, until they converge
+        # Therefore, iterate the flux and the pressure so long, until they converge - i honestly have no idea why that works :D (steady state test prove it right ¯\_(ツ)_/¯)
 
         eps                 = 1e-12                                         # convergence criterion: iteration change < eps
         iteration_change    = 1.                                            # change in Q from one iteration to the next

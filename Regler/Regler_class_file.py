@@ -1,4 +1,5 @@
 import numpy as np
+
 #based on https://en.wikipedia.org/wiki/PID_controller#Discrete_implementation
 
 # performance parameters for controllers
@@ -129,7 +130,7 @@ class PI_controller_class:
     def get_info(self):        
         new_line = '\n'
         # :<10 pads the self.value to be 10 characters wide
-        print_str = (f"Turbine has the following attributes: {new_line}" 
+        print_str = (f"Controller has the following attributes: {new_line}" 
             f"----------------------------- {new_line}"
             f"Type                      =   PI Controller {new_line}"
             f"Setpoint                  =   {self.SP:<10} {new_line}"

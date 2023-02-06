@@ -1,5 +1,8 @@
-import os
-import sys
+# import modules for general use
+import os  # to import functions from other folders
+import sys  # to import functions from other folders
+from logging import \
+    exception  # to throw an exception when a specific condition is met
 
 import numpy as np
 
@@ -39,6 +42,7 @@ class Druckrohrleitung_class:
     g = 9.81    # m/s²  gravitational acceleration
 
 # init
+    # see docstring below
     def __init__(self,total_length,diameter,pipeline_head,number_segments,Darcy_friction_factor,pw_vel,timestep,pressure_unit_disp,rho=1000):
         """
         Creates a reservoir with given attributes in this order: \n
@@ -154,6 +158,7 @@ class Druckrohrleitung_class:
         ss_v0 = np.full_like(self.x_vec,ss_flux/self.A)
 
         # the static pressure is given by static state pressure of the reservoir, corrected for the hydraulic head of the pipe and friction losses
+            # dynamic pressure does not play a role, because it has the same influence on both sides of the equation (constant flow velocity) and therefore cancels out
         ss_pressure     = ss_pressure_res+(self.density*self.g*self.h_vec)-(self.f_D*self.x_vec/self.dia*self.density/2*ss_v0**2)
 
         # set the initial conditions
@@ -162,6 +167,7 @@ class Druckrohrleitung_class:
 
 # getter - return attributes
     def get_info(self):
+        # prints out the info on the current state of the reservoir
         new_line    = '\n'
         angle_deg   = round(self.angle/np.pi*180,3)
 
@@ -182,8 +188,11 @@ class Druckrohrleitung_class:
             f"Pressure wave vel.    =       {self.c:<10} {self.velocity_unit_disp} {new_line}"
             f"Simulation timestep   =       {self.dt:<10} {self.time_unit_disp} {new_line}"
             f"----------------------------- {new_line}"
-            f"Velocity and pressure distribution are vectors and are accessible by the .v and .p attribute of the pipeline object")
+            f"Velocity and pressure distribution are vectors and are accessible via the {new_line} \
+                 get_current_velocity_distribution() and get_current_pressure_distribution() methods of the pipeline object. {new_line} \
+                    See also get_lowest_XXX_per_node() and get_highest_XXX_per_node() methods.")
 
+        # print the info to console
         print(print_str)    
 
     def get_current_pressure_distribution(self,disp_flag=False):
@@ -200,12 +209,14 @@ class Druckrohrleitung_class:
         return self.v*self.A
 
     def get_lowest_pressure_per_node(self,disp_flag=False):
+        # disp_flag if one wants to directly plot the return of this method
         if disp_flag == True:       # convert to pressure unit disp
             return pressure_conversion(self.p_min,self.pressure_unit,self.pressure_unit_disp)
         elif disp_flag == False:    # stay in Pa
             return self.p_min
 
     def get_highest_pressure_per_node(self,disp_flag=False):
+        # disp_flag if one wants to directly plot the return of this method
         if disp_flag == True:       # convert to pressure unit disp
             return pressure_conversion(self.p_max,self.pressure_unit,self.pressure_unit_disp)
         elif disp_flag == False:    # stay in Pa
@@ -244,7 +255,7 @@ class Druckrohrleitung_class:
         g       = self.g            # graviational acceleration
         alpha   = self.angle        # pipeline angle
 
-        # Vectorize this loop?
+        # Vectorized loop see below
         for i in range(1,nn-1):
             self.v[i] = 0.5*(self.v_old[i+1]+self.v_old[i-1])-0.5/(rho*c)*(self.p_old[i+1]-self.p_old[i-1]) \
                 +dt*g*np.sin(alpha)-f_D*dt/(4*D)*(abs(self.v_old[i+1])*self.v_old[i+1]+abs(self.v_old[i-1])*self.v_old[i-1])
@@ -265,6 +276,7 @@ class Druckrohrleitung_class:
         self.v_old = self.v.copy()        
 
     def timestep_characteristic_method_vectorized(self):
+        # faster then above
         # use the method of characteristics to calculate the pressure and velocities at all nodes except the boundary ones
             # they are set with the .set_boundary_conditions_next_timestep() method beforehand
         
