@@ -1,14 +1,15 @@
+import os
+import sys
+
 import numpy as np
+from pyparsing import alphanums
 
 #importing pressure conversion function
-import sys
-import os
-
-from pyparsing import alphanums
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
+
 
 class Francis_Turbine:
 # units 
@@ -71,10 +72,18 @@ class Francis_Turbine:
         # set pressure in front of the turbine
         self.p = pressure
 
-    def set_steady_state(self,ss_flux,ss_pressure):
+    def set_steady_state_by_flux(self,ss_flux,ss_pressure):
         # calculate and set steady state LA, that allows the flow of ss_flux at ss_pressure through the
             # turbine at the steady state LA
         ss_LA = self.LA_n*ss_flux/self.Q_n*np.sqrt(self.p_n/ss_pressure)
+        if ss_LA < 0 or ss_LA > 1:
+            raise Exception('LA out of range [0;1]')
+        self.set_LA(ss_LA,display_warning=False)
+        self.set_pressure(ss_pressure)
+        self.get_current_Q()
+
+    def set_steady_state_by_LA(self,ss_LA,ss_pressure):
+        # set the turbine to a steady state defined by the pressure and the guide vane opening (LeitApparatöffnung)
         if ss_LA < 0 or ss_LA > 1:
             raise Exception('LA out of range [0;1]')
         self.set_LA(ss_LA,display_warning=False)
@@ -154,7 +163,7 @@ class Francis_Turbine:
     def converge(self,convergence_parameters):
         # small numerical disturbances (~1e-12 m/s) in the velocity can get amplified at the turbine node, because the new velocity of the turbine and the
         # new pressure from the forward characteristic are not perfectly compatible.
-        # Therefore, iterate the flux and the pressure so long, until they converge
+        # Therefore, iterate the flux and the pressure so long, until they converge - i honestly have no idea why that works :D (steady state test prove it right ¯\_(ツ)_/¯)
 
         eps                 = 1e-12                                         # convergence criterion: iteration change < eps
         iteration_change    = 1.                                            # change in Q from one iteration to the next
@@ -193,4 +202,3 @@ class Francis_Turbine:
             if i == 1e6:
                 print('did not converge')
                 break
-        # print(i)

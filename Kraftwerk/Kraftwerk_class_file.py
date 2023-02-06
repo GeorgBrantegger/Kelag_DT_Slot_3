@@ -1,19 +1,32 @@
+# import modules for general use
+import os  # to import functions from other folders
+import sys  # to import functions from other folders
+from logging import \
+    exception  # to throw an exception when a specific condition is met
+
 import numpy as np
-#importing Druckrohrleitung
-import sys
-import os
-current = os.path.dirname(os.path.realpath('Main_Programm.ipynb'))
+
+#importing pressure conversion function
+current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
 from Turbinen.Turbinen_class_file import Francis_Turbine
 
+
 class Kraftwerk_class:
     g = 9.81
 
     def __init__(self):
+        # create an empty powerhouse
+        # see add_turbine() method
         self.turbines = []
         self.n_turbines = 0
+
+    def add_turbine(self,turbine):
+        # add a turbine object from the turbine class
+        self.turbines.append(turbine)
+        self.n_turbines += 1
 
 # setter
     def set_LAs(self,LA_vec,display_warning=True):
@@ -24,10 +37,14 @@ class Kraftwerk_class:
         for i in range(self.n_turbines):
             self.turbines[i].set_pressure(pressure)
         
-    def set_steady_state(self,ss_flux,ss_pressure):
+    def set_steady_state_by_flux(self,ss_flux,ss_pressure):
         self.identify_Q_proportion()
         for i in range(self.n_turbines):
-            self.turbines[i].set_steady_state(ss_flux*self.Q_prop[i],ss_pressure)
+            self.turbines[i].set_steady_state_by_flux(ss_flux*self.Q_prop[i],ss_pressure)
+
+    def set_steady_state_by_LA(self,LA_vec,ss_pressure):
+        for i in range(self.n_turbines):
+            self.turbines[i].set_steady_state_by_LA(LA_vec[i],ss_pressure)
 
 # getter
     def get_current_Q(self):
@@ -57,14 +74,11 @@ class Kraftwerk_class:
 
 # methods
     def identify_Q_proportion(self):
+        # calculate the proportions of the nominal fluxes of all turbines in the powerhouse
         Q_n_vec = np.zeros(self.n_turbines)
         for i in range(self.n_turbines):
             Q_n_vec[i] = self.turbines[i].get_Q_n()
         self.Q_prop = Q_n_vec/np.sum(Q_n_vec)
-
-    def add_turbine(self,turbine):
-        self.turbines.append(turbine)
-        self.n_turbines += 1
     
     def update_LAs(self,LA_soll_vec):
         for i in range(self.n_turbines):
@@ -73,7 +87,7 @@ class Kraftwerk_class:
     def converge(self,convergence_parameters):
         # small numerical disturbances (~1e-12 m/s) in the velocity can get amplified at the turbine node, because the new velocity of the turbine and the
         # new pressure from the forward characteristic are not perfectly compatible.
-        # Therefore, iterate the flux and the pressure so long, until they converge
+        # Therefore, iterate the flux and the pressure so long, until they converge - i honestly have no idea why that works :D (steady state test prove it right ¯\_(ツ)_/¯)
 
         eps                 = 1e-12                                         # convergence criterion: iteration change < eps
         iteration_change    = 1.                                            # change in Q from one iteration to the next

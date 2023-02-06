@@ -1,7 +1,10 @@
-2bignored.txt
-*__pycache__/
-.vscode/settings.json
-*.pyc
-Messing Around/
-Messing Around/messy_nb.ipynb
-Validation Data/
+*__pycache__/                  
+.vscode/settings.json          
+*.pyc                         
+Messing Around/                
+Validation Data/               
+Druckrohrleitung/Gif Plots     
+Simulation Hammer/             
+Simulation Arriach/            
+log.txt                       
+
