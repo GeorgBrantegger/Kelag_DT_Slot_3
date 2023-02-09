@@ -2,16 +2,9 @@
 *__pycache__/
 .vscode/settings.json
 *.pyc
-Messing Around/
-Messing Around/messy_nb.ipynb
 Validation Data/
-Druckrohrleitung/GIF Plots/
-*__pycache__/                  
-.vscode/settings.json          
-*.pyc                         
+Druckrohrleitung/GIF Plots/                    
 Messing Around/                
-Validation Data/               
-Druckrohrleitung/Gif Plots     
 Simulation Hammer/             
 Simulation Arriach/            
 Simulation Lamnitz/  
