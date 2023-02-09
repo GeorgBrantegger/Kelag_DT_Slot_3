@@ -13,7 +13,7 @@ from Druckrohrleitung.Druckrohrleitung_class_file import Druckrohrleitung_class
 from functions.pressure_conversion import pressure_conversion
 from Kraftwerk.Kraftwerk_class_file import Kraftwerk_class
 from Regler.Regler_class_file import PI_controller_class
-from Turbinen.Turbinen_class_file import Francis_Turbine
+from Turbinen.Turbinen_class_file import Turbine
 
 Area_list = np.round(np.arange(40.,90.,5.),1)
 Kp_list = np.round(np.arange(0.1,3.0,0.2),1)
@@ -113,8 +113,8 @@ for i in range(np.size(Area_list)):
             # create objects
 
             # influx setting turbines
-            OL_T1 = Francis_Turbine(OL_T1_Q_nenn,OL_T1_p_nenn,OL_T1_closingTime,Pip_dt,pUnit_conv)
-            OL_T2 = Francis_Turbine(OL_T2_Q_nenn,OL_T2_p_nenn,OL_T2_closingTime,Pip_dt,pUnit_conv)
+            OL_T1 = Turbine(OL_T1_Q_nenn,OL_T1_p_nenn,OL_T1_closingTime,Pip_dt,pUnit_conv)
+            OL_T2 = Turbine(OL_T2_Q_nenn,OL_T2_p_nenn,OL_T2_closingTime,Pip_dt,pUnit_conv)
 
             KW_OL = Kraftwerk_class()
             KW_OL.add_turbine(OL_T1)
@@ -133,8 +133,8 @@ for i in range(np.size(Area_list)):
             pipe.set_steady_state(flux_init,reservoir.get_current_pressure())
 
             # downstream turbines
-            UL_T1 = Francis_Turbine(UL_T1_Q_nenn,UL_T1_p_nenn,UL_T1_closingTime,Pip_dt,pUnit_conv)
-            UL_T2 = Francis_Turbine(UL_T2_Q_nenn,UL_T2_p_nenn,UL_T2_closingTime,Pip_dt,pUnit_conv)
+            UL_T1 = Turbine(UL_T1_Q_nenn,UL_T1_p_nenn,UL_T1_closingTime,Pip_dt,pUnit_conv)
+            UL_T2 = Turbine(UL_T2_Q_nenn,UL_T2_p_nenn,UL_T2_closingTime,Pip_dt,pUnit_conv)
 
             KW_UL = Kraftwerk_class()
             KW_UL.add_turbine(UL_T1)
