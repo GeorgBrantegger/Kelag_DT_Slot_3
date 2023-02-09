@@ -11,7 +11,6 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
-from Turbinen.Turbinen_class_file import Francis_Turbine
 
 
 class Kraftwerk_class:

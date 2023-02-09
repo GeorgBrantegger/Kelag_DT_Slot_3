@@ -11,7 +11,7 @@ sys.path.append(parent)
 from functions.pressure_conversion import pressure_conversion
 
 
-class Francis_Turbine:
+class Turbine:
 # units 
     # make sure that units and display units are the same
     # units are used to label graphs and disp units are used to have a bearable format when using pythons print()
@@ -119,7 +119,7 @@ class Francis_Turbine:
             # :<10 pads the self.value to be 10 characters wide
             print_str = (f"Turbine has the following attributes: {new_line}" 
                 f"----------------------------- {new_line}"
-                f"Type                  =       Francis {new_line}"
+                f"Type                  =       Generisch {new_line}"
                 f"Nominal flux          =       {self.Q_n:<10} {self.flux_unit_disp} {new_line}"
                 f"Nominal pressure      =       {round(p_n,3):<10} {self.pressure_unit_disp}{new_line}"
                 f"Nominal LA            =       {self.LA_n*100:<10} {self.LA_unit_disp} {new_line}"
