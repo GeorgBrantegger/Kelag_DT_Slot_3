@@ -225,8 +225,8 @@ class Ausgleichsbecken_class:
         delta_level = net_flux*timestep/self.area
         level_new = (self.level+delta_level)
         # raise exception error if level in reservoir falls below 0.01 ######################### has to be commented out if used in loop
-        if level_new < 0.01:
-            raise Exception('Reservoir ran emtpy')
+        # if level_new < 0.01:
+        #     raise Exception('Reservoir ran emtpy')
         # set flag is necessary because update_level() is used to get a halfstep value in the time evoultion
         if set_flag == True:
             self.set_level(level_new,display_warning=False)
