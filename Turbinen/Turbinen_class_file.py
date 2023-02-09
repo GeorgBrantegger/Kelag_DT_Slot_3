@@ -90,7 +90,7 @@ class Francis_Turbine:
         self.set_pressure(ss_pressure)
         self.get_current_Q()
 
-#getter - get attributes
+# getter - get attributes
     def get_current_Q(self):
         # return the flux through the turbine, based on the current pressure in front
             #  of the turbine and the Leitapparatöffnung
